@@ -7,7 +7,7 @@ setup(
     author_email='short.devin@gmail.com',
     packages=['bibliograph'],
     install_requires=['ads', 'datetime', 'json', 'networkx', 'os', 'pandas', 'progressbar', 'shutil'],
-    version='0.01',
+    version='0.01.0-alpha',
     license='MIT',
     description='A Python package for visualizing and analyzing bibliographic data',
     long_description=open('README.md').read()
