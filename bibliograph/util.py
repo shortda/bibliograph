@@ -127,7 +127,7 @@ class updateResult:
 		the row to be added or overwritten, but this could vary if
 		bibliography is indexed by something other than integers.
 	'''
-	def __init__(updated, entry=None, index=None):
+	def __init__(self, updated, entry=None, index=None):
 		self.updated = updated
 		if updated:
 			self.entry = entry
