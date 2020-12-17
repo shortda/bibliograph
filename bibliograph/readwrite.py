@@ -120,7 +120,7 @@ def slurpBibTex(bibTexFilename, bibCols=None, refCols='title', tag_processors=No
 
 	return(bib)
 
-def slurpReferenceCSV(csvname, cn, direction='outgoing', abbr=None, uid='ref', noNewSources=False, separator=' | ', translator=None):
+def slurpReferenceCSV(csvname, cn, direction='outgoing', uid='ref', noNewSources=False, separator=' | ', translator=None):
 	'''
 	Read a CSV file that contains reference data. File should have two
 	columns and every row should have data in at most one column. If a
@@ -158,9 +158,6 @@ def slurpReferenceCSV(csvname, cn, direction='outgoing', abbr=None, uid='ref', n
 		file are papers whose texts contain references to papers in 
 		the bib DataFrame (they're references TO papers in the
 		bibliogrpahy).
-
-	abbr : dictionary
-		Abbreviations or other translations of publication names.
 
 	uid : string (probably)
 		Label of the column containing unique identifiers for each
