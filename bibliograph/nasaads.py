@@ -46,7 +46,7 @@ def makeQueries(sources, searchColumns, adsTerms=None, toQuery=None, wrapper=Non
 	else:
 		thisIndex = sources.index
 
-	print('Making ADS query strings for\n', sources.loc[thisIndex])
+	print('Making ADS query strings for\n', sources.loc[thisIndex], '\n')
 
 	if adsTerms is not None:
 		fields = [[c, adsTerms[i]] for i,c in enumerate(searchColumns)]
