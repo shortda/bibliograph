@@ -313,8 +313,10 @@ def checkCSV(csvname, cn, uid='ref', **kwargs):
 		entry = checkBib.loc[i].squeeze()
 		if bib[uid].isin([entry[uid]]).any():
 			bibEntry = bib.loc[bib[uid] == entry[uid]].squeeze()
-			if not all([(entry[c]==bibEntry[c]) for c in entry.columns]):
+			if not all([(entry[c]==bibEntry[c]) for c in bib.columns]):
 				simBib.loc[i] = entry
 		bar.update(bIndex.index(i))
+
+	bar.finish()
 
 	return(checkBib, checkRefs, simBib)

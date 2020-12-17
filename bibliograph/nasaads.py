@@ -305,4 +305,6 @@ def queryADS(sources, searchColumns, fetchTerms, adsTerms=None, fetchColumns=Non
 				results = results.append(pd.Series(dict(zip(theseColumns, values))), ignore_index=True)
 			bar.update(qIndex.index(i))
 
+		bar.finish()
+
 	return((results, queries, badQueries))
