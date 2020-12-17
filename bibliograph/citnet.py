@@ -32,9 +32,6 @@ class citnet:
 		Labels of columns whose values should be joined by spaces to
 		create a unique reference string for each row. If string, must
 		contain a column label. Defaults to 'title'.
-
-	abbr : dictionary
-		Abbreviations or other translations of publication names.
 	
 	bibTex_processors : dictionary
 		tag_processors is a dictionary with format 
@@ -73,7 +70,7 @@ class citnet:
 				bibtex = None
 
 		if bibtex is not None:
-			self.bib = slurpBibTex(bibtex, bibCols=bibCols, refCols=refCols, abbr=abbr, tag_processors=bibTex_processors)
+			self.bib = slurpBibTex(bibtex, bibCols=bibCols, refCols=refCols, tag_processors=bibTex_processors)
 
 			self.notUnique = [c for c in self.bib if c != self.uid]
 
