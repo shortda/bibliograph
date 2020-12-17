@@ -250,7 +250,7 @@ def slurpReferenceCSV(csvname, cn, direction='outgoing', uid='ref', noNewSources
 				cn.update(thisTgt, updateCit=True, src=thisSrcI)
 			elif (tgt == ''):
 				if noNewSources and not (oldSources == src).any():
-					raise ValueError('found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
+					raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
 				thisSrc = bib[bib[uid] == src]
 				if len(thisSrc) > 1:
 					raise RuntimeError('Found repeated values in bib["' + uid + '"] when processing\n' + str(thisSrc))
