@@ -1,4 +1,5 @@
 import csv
+import progressbar
 import networkx as nx
 import pandas as pd
 from .util import bibUpdate
@@ -306,11 +307,17 @@ def checkCSV(csvname, cn, uid='ref', **kwargs):
 	checkBib, checkRefs = slurpReferenceCSV(csvname, cn, uid=uid, **kwargs)
 	simBib = pd.DataFrame(columns=checkBib.columns)
 	
+	#set up and start a progress bar
+	widgets = ['papers from CSV file: ', progressbar.Percentage(),' ', progressbar.Bar(marker='='),'|', progressbar.Timer(),]
+	bar = progressbar.ProgressBar(widgets=widgets, maxval=(len(checkBib)-1)).start()
+	bIndex = list(checkBib.index)
+
 	for i in checkBib.index:
 		entry = checkBib.loc[i].squeeze()
 		if bib[uid].isin([entry[uid]]).any():
 			bibEntry = bib.loc[bib[uid] == entry[uid]].squeeze()
 			if not all([(entry[c]==bibEntry[c]) for c in entry.columns]):
 				simBib.loc[i] = entry
+		bar.update(bIndex.index(i))
 
 	return(checkBib, checkRefs, simBib)
