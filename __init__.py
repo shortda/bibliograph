@@ -1,4 +1,0 @@
-
-from .citnet import citnet
-
-
