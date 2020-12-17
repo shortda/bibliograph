@@ -7,7 +7,7 @@ from .util import backup
 from .util import bibUpdate 
 from .util import makeGraph
 from .nasaads import queryADSbibcodes
-from .nasaads import queryADSreferences
+from .nasaads import queryADS
 from os.path import isfile
 
 class citnet:
