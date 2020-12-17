@@ -1,0 +1,50 @@
+# bibliograph pseudocode
+
+n = bibliograph.citnet('NCAR', ...)
+
+n.bib.readExcelCSV()
+
+n.bib = getADSdata(bib)
+
+n.bib.writeExcelCSV()
+
+n.summarize()
+
+# return an object that contains detailed data.
+# printed output should look something like:
+#
+# bibliography
+# ------------
+# number of duplicate entries
+# number of duplicate values in each column
+# number of entries
+# number of publications
+# 
+# citations
+# ---------
+# number of edges
+# number of sources
+# number of targets
+# 
+# citation graph
+# ??????????????
+# 
+# authorship
+# ----------
+# number of first authors
+# number of authors
+# number of coauthored documents
+# number of coauthor combinations
+#
+# authorship edges
+# ----------------
+# number of edges
+# number of source authors
+# number of target authors
+
+
+
+coauthors = networkx.Graph()
+
+for all author pairs:
+	coauthors.add_edge(author, author, weight=number_of_copubs)
