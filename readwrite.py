@@ -19,10 +19,10 @@ def slurpBibTex(bibTexFilename, bibCols=None, refCols='title', tag_processors=No
 		bibliography will contain columns for every tag in the BibTex
 		file.
 
-	refCols : list-like
+	refCols : list-like OR string
 		Labels of columns whose values should be joined by spaces to
-		create a unique reference string for each row. Defaults to the
-		title field stored in the BibTex file.
+		create a unique reference string for each row. If string, must
+		contain a column label. Defaults to 'title'.
 
 	tag_processors : dictionary
 		tag_processors is a dictionary with format 
