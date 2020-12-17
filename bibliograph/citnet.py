@@ -52,7 +52,7 @@ class citnet:
 
 	'''
 	# TODO : make abbr an attribute of the citation network?
-	def __init__(self, name, bibtex=None, bibCols=None, refCols='title', abbr=None, bibTex_processors=None):
+	def __init__(self, name, bibtex=None, bibCols=None, refCols='title', bibTex_processors=None):
 
 		self.name = name
 		self.refCols = refCols
