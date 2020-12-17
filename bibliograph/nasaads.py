@@ -161,6 +161,7 @@ def queryADSbibcodes(sources, searchColumns, adsTerms=None, toQuery=None):
 	queries.insert(len(queries.columns), 'bibcode', ['']*len(queries))
 
 	if len(queries) == 0:
+		print('queryADSbibcodes created no query strings')
 		return ((queries, badQueries))
 
 	if confirmADS(queries):
@@ -275,6 +276,7 @@ def queryADS(sources, searchColumns, fetchTerms, adsTerms=None, fetchColumns=Non
 	results = pd.DataFrame(columns=theseColumns)
 
 	if len(queries) == 0:
+		print('queryADS created no query strings')
 		return((results, queries, badQueries))
 
 	if articleProcessor is None:
