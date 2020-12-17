@@ -12,8 +12,46 @@ from os.path import isfile
 
 class citnet:
 	'''
-	TODO : make abbr an attribute of the citation network?
+	The citnet class provides a citation network object that contains
+	a pandas DataFrame for a bibliography, a DataFrame for references
+	between bibliography, and a NetworkX graph representing the
+	network. 
+
+	Parameters
+	----------
+	name : string
+		Internal identifier, mostly used for reading and storing files
+
+	bibtex : string
+		Name of BibTex file containing the bibliography
+
+	bibCols : list-like
+		List of labels for bibliography columns
+
+	refCols : list-like OR string
+		Labels of columns whose values should be joined by spaces to
+		create a unique reference string for each row. If string, must
+		contain a column label. Defaults to 'title'.
+
+	abbr : dictionary
+		Abbreviations or other translations of publication names.
+	
+	bibTex_processors : dictionary
+		tag_processors is a dictionary with format 
+		
+			{bibTexTag:[columnName, function_to_process_bibTex]}
+		or
+			{bibTexTag:[[columnName1, function1_to_process_bibTex],
+						[columnName2, function2_to_process_bibTex]]}
+
+		where bibTexTag is a field in the BibTex entries, columnName
+		is the label for a bibliography column where data from that
+		tag should be stored, and the functions translate the text of
+		the BibTex entry into a value that should be stored in the 
+		bibliography column
+
 	'''
+	# TODO : make abbr an attribute of the citation network?
 	def __init__(self, name, bibtex=None, bibCols=None, refCols='title', abbr=None, bibTex_processors=None):
 
 		self.name = name
