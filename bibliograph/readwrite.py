@@ -4,6 +4,7 @@ import networkx as nx
 import pandas as pd
 from .util import bibUpdate
 from .util import getBibtexTags
+from .util import refToBib
 
 def slurpBibTex(bibTexFilename, bibCols=None, refCols='title', tag_processors=None):
 	'''
@@ -223,100 +224,18 @@ def slurpReferenceCSV(csvname, cn, direction='outgoing', uid='ref', noNewSources
 						badEntries.append(str(reader.line_num) + '  ' + tgt)
 						continue
 				thisTgt = pd.Series(dict(zip(bibCols, thisTgt)), index=bibCols)
-				'''
-				thisTgtN = thisTgt[uid]
-				if (bib[uid] == thisTgtN).any(): 
-					original = bib[bib[uid] == thisTgtN]
-					if len(original) == 1:
-						for c in bibCols:
-							if (original[c] == 'x') and (thisTgt[c] != 'x'):
-								original[c] = thisTgt[c]
-						cit = cit.append({'src':thisSrcI, 'tgt':original.index[0]}, ignore_index=True)
-					else:
-						raise RuntimeError('Found repeated values in bib["' + uid + '"] when processing\n' + str(thisTgt))
-				else:
-					bib = bib.append(thisTgt, ignore_index=True)
-					cit = cit.append({'src':thisSrcI, 'tgt':bib.index[-1]}, ignore_index=True)
-				'''
-				'''
-				getUpdate = bibUpdate(bib, thisTgt, uid)
-				if getUpdate.updated:
-					bib.loc[getUpdate.index] = getUpdate.entry
-					cit = cit.append({'src':thisSrcI, 'tgt':getUpdate.index}, ignore_index=True)
-				else:
-					bib = bib.append(thisTgt, ignore_index=True)
-					cit = cit.append({'src':thisSrcI, 'tgt':bib.index[-1]}, ignore_index=True)
-				'''
 				cn.update(thisTgt, updateCit=True, src=thisSrcI)
-			elif (tgt == ''):
-				if noNewSources and not (oldSources == src).any():
-					raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
+			elif (tgt == ''): 
+				if not (oldSources == src).any():
+					if noNewSources:
+						raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
+					cn.update(refToBib(src, bibCols, cn.refCols))
 				thisSrc = bib[bib[uid] == src]
 				if len(thisSrc) > 1:
 					raise RuntimeError('Found repeated values in bib["' + uid + '"] when processing\n' + str(thisSrc))
 				thisSrcI = thisSrc.index[0]
-				thisSrcN = thisSrc.squeeze()[uid]
 			else:
 				raise ValueError('Bad row at', reader.line_num, 'in', csvname)
+		print('\tReading row ' + str(reader.line_num))
 		if len(badEntries) != 0:
 			raise ValueError('Found ' + str(len(badEntries)) + ' bad entries in csv file:\n\t' + '\n\t'.join(badEntries))	
-
-	return(bib, cit)
-
-
-def checkCSV(csvname, cn, uid='ref', **kwargs):
-	'''
-	Read a references csv file and check if there are partial
-	matches to rows with the same uid in the bibliography.
-
-	Parameters
-	----------
-	csvname : string
-		Name of the csv file to read.
-
-	cn : bibliograph.citnet
-		A citation network containing bibliographic and citation data
-		for comparison to csv data.
-
-	uid : string (probably)
-		Label of the column containing unique identifiers for each
-		bibliography entry.
-
-	kwargs
-		all other keyword arguments are passed to
-		bibliograph.readwrite.slurpReferencesCSV
-
-	Returns
-	-------
-	checkBib : pd.DataFrame
-		Bibliography entries read from the csv file.
-
-	checkRefs : pd.DataFrame
-		Citation data read from the csv file.
-
-	simBib : pd.DataFrame
-		Bibliography entries read from the csv file which have the
-		same uid as at least one row in the bibliography DataFrame but
-		which are not exact duplicates of any bibliography entry.
-	'''
-	bib = cn.bib
-	cit = cn.cit
-	checkBib, checkRefs = slurpReferenceCSV(csvname, cn, uid=uid, **kwargs)
-	simBib = pd.DataFrame(columns=checkBib.columns)
-	
-	#set up and start a progress bar
-	widgets = ['papers from CSV file: ', progressbar.Percentage(),' ', progressbar.Bar(marker='='),'|', progressbar.Timer(),]
-	bar = progressbar.ProgressBar(widgets=widgets, maxval=(len(checkBib)-1)).start()
-	bIndex = list(checkBib.index)
-
-	for i in checkBib.index:
-		entry = checkBib.loc[i].squeeze()
-		if bib[uid].isin([entry[uid]]).any():
-			bibEntry = bib.loc[bib[uid] == entry[uid]].squeeze()
-			if not all([(entry[c]==bibEntry[c]) for c in bib.columns]):
-				simBib.loc[i] = entry
-		bar.update(bIndex.index(i))
-
-	bar.finish()
-
-	return(checkBib, checkRefs, simBib)
