@@ -183,15 +183,8 @@ def slurpReferenceCSV(csvname, cn, direction='outgoing', uid='ref', noNewSources
 		translator is None, script assumes reference strings contain
 		data for all bibliography columns listed in the order of
 		columns in the bibliography.
-
-	Returns
-	-------
-	bib : pd.DataFrame
-		DatFrame with updated bibliographic data
-
-	cit : pd.DataFrame
-		DataFrame with updated citation data
 	'''
+	print('\tSlurping file ' + csvname)
 	bib = cn.bib.copy()
 	cit = cn.cit.copy()
 
@@ -199,19 +192,20 @@ def slurpReferenceCSV(csvname, cn, direction='outgoing', uid='ref', noNewSources
 		raise ValueError('slurpReferenceCSV needs direction "incoming" or "outgoing" to define sources and targets in cit DataFrame.\n\tGot ' + str(direction))
 
 	bibCols = bib.columns
-	if noNewSources: 
-		oldSources = bib[uid].copy()
+	oldSources = bib[uid].copy()
 
 	with open(csvname, 'r', encoding='utf-8') as f:
 		reader = csv.reader(f, delimiter=',')
 		badEntries = []
 		for row in reader:
+			print('\tReading row ' + str(reader.line_num), end='\r')
 			if direction == 'outgoing':
 				src = row[0].strip()
 				tgt = row[1].strip()
 			elif direction == 'incoming':
 				src = row[1].strip()
 				tgt = row[0].strip()
+
 			if (src != '') and (tgt != ''):
 				raise ValueError('Found the following row with two entries in ' + csvname + ':\n\t' + str(row))
 			elif (src == '') and (tgt == ''):
