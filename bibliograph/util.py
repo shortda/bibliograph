@@ -180,3 +180,8 @@ def bibUpdate(bib, newEntry, uid):
 			raise RuntimeError('Found repeated values in bibliography column ' + str(uid) + ' when processing\n' + str(newEntry))
 	else:
 		return(updateResult(False, newEntry))
+
+def refToBib(refString, bibCols, refCols):
+	if refString.count(' ') != len(refCols)-1:
+		raise ValueError("ref string contains fewer values than refCols. Can't convert to series for bib entry")
+	return(pd.Series(dict(zip(refCols, refString.split(' '))), index=bibCols))
