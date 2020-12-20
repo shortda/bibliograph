@@ -3,7 +3,7 @@ import pandas as pd
 from .util import getBibtexTags
 from .util import refToBib
 
-def slurp_bibtex(cn, bibTexFilename, refcols, bibcols=None, tag_processors=None):
+def slurp_bibtex(cn, bibtex, refcols, bibcols=None, tag_processors=None):
 	'''
 	Read a BibTex file and create a pandas DataFrame for the
 	bibliography.
@@ -42,7 +42,7 @@ def slurp_bibtex(cn, bibTexFilename, refcols, bibcols=None, tag_processors=None)
 	bib : pd.DataFrame
 		The bibliography
 	'''
-	texTags = getBibtexTags(bibTexFilename)
+	texTags = getBibtexTags(bibtex)
 
 	if bibcols is None:
 		bibcols = texTags
