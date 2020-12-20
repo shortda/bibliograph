@@ -74,12 +74,12 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 				translated.append(bibtex_parsers[tag][0])
 		print('bibliography columns not translated from bibTex data:', [c for c in bibcols if c not in translated], '\n')
 			
-	for texEntry in open(bibtex, encoding='utf8').read().split('@')[1:]:
+	for texentry in open(bibtex, encoding='utf8').read().split('@')[1:]:
 		
 		bibEntry = {}
-		texEntry = texEntry.translate(str.maketrans('','','{}\t')).split('\n')
+		texentry = texentry.translate(str.maketrans('','','{}\t')).split('\n')
 
-		for item in texEntry:
+		for item in texentry:
 			if '=' in item:
 
 				if item.count('=') > 1:
