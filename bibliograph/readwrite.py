@@ -120,7 +120,7 @@ def slurpBibTex(cn, bibTexFilename, bibcols=None, refcols='title', tag_processor
 
 	#return(bib)
 
-def slurpReferenceCSV(cn, csvname, direction='outgoing', uid='ref', noNewSources=False, separator=' | ', translator=None):
+def slurpReferenceCSV(cn, csvname, direction='outgoing', noNewSources=False, separator=' | ', translator=None):
 	'''
 	Read a CSV file that contains reference data. File should have two
 	columns and every row should have data in at most one column. If a
@@ -186,6 +186,7 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', uid='ref', noNewSources
 	print('\tSlurping file ' + csvname)
 	bib = cn.bib.copy()
 	cit = cn.cit.copy()
+	uid = cn.uid
 
 	if direction not in ['incoming', 'outgoing']:
 		raise ValueError('slurpReferenceCSV needs direction "incoming" or "outgoing" to define sources and targets in cit DataFrame.\n\tGot ' + str(direction))
