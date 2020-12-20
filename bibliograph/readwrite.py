@@ -6,7 +6,7 @@ from .util import bibUpdate
 from .util import getBibtexTags
 from .util import refToBib
 
-def slurpBibTex(bibTexFilename, bibCols=None, refCols='title', tag_processors=None):
+def slurpBibTex(cn, bibTexFilename, bibCols=None, refCols='title', tag_processors=None):
 	'''
 	Read a BibTex file and create a pandas DataFrame for the
 	bibliography.
@@ -78,7 +78,7 @@ def slurpBibTex(bibTexFilename, bibCols=None, refCols='title', tag_processors=No
 				translated.append(tag_processors[tag][0])
 		print('bibliography columns not translated from bibTex data:', [c for c in bibCols if c not in translated], '\n')
 
-	bib = pd.DataFrame(columns=bibCols, dtype='str')
+	#bib = pd.DataFrame(columns=bibCols, dtype='str')
 			
 	for texEntry in open(bibTexFilename, encoding='utf8').read().split('@')[1:]:
 		
@@ -116,10 +116,9 @@ def slurpBibTex(bibTexFilename, bibCols=None, refCols='title', tag_processors=No
 					bibEntry['ref'] += bibEntry[key] + ' '
 			bibEntry['ref'] = bibEntry['ref'][:-1]
 
-		bibEntry = pd.Series(bibEntry, index=bibCols)
-		bib = bib.append(bibEntry, ignore_index=True)
+		cn.update(pd.Series(bibEntry, index=bibCols))
 
-	return(bib)
+	#return(bib)
 
 def slurpReferenceCSV(cn, csvname, direction='outgoing', uid='ref', noNewSources=False, separator=' | ', translator=None):
 	'''
