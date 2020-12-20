@@ -141,7 +141,7 @@ class citnet:
 			bibliography.readwrite.slurpReferenceCSV
 		'''
 		print('Loading data from ' + filename)
-		slurpReferenceCSV(filename, self, **kwargs)
+		slurpReferenceCSV(self, filename, **kwargs)
 
 	def writeNetwork(self, fileRoot=None):
 		'''
