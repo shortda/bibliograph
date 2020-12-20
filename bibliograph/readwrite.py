@@ -103,12 +103,11 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 				elif tag in bibcols:
 					bibEntry[tag] = item
 
-		if type(refcols) != str:
-			bibEntry['ref'] = ''
-			for key in refcols:
-				if key in bibEntry.keys():
-					bibEntry['ref'] += bibEntry[key] + ' '
-			bibEntry['ref'] = bibEntry['ref'][:-1]
+		bibEntry['ref'] = ''
+		for key in refcols:
+			if key in bibEntry.keys():
+				bibEntry['ref'] += bibEntry[key] + ' '
+		bibEntry['ref'] = bibEntry['ref'][:-1]
 
 		cn.update(pd.Series(bibEntry, index=bibcols))
 
