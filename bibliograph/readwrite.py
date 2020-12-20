@@ -204,15 +204,6 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', noNewSources=False, sep
 				raise ValueError('Found the following row with two entries in ' + csvname + ':\n\t' + str(row))
 			elif (src == '') and (tgt == ''):
 				raise ValueError('Found row with no data at line ' + str(reader.line_num) + ' in ' + csvname)
-			elif src == '':
-				thisTgt = tgt.split(' | ')
-				if translator is not None:
-					thisTgt = translator(thisTgt)
-					if thisTgt == 0:
-						badEntries.append(str(reader.line_num) + '  ' + tgt)
-						continue
-				thisTgt = pd.Series(dict(zip(bibcols, thisTgt)), index=bibcols)
-				cn.update(thisTgt, updateCit=True, src=thisSrcI)
 			elif (tgt == ''): 
 				if not (oldSources == src).any():
 					if noNewSources:
@@ -224,6 +215,15 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', noNewSources=False, sep
 					if len(thisSrc) > 1:
 						raise RuntimeError('Found repeated values in cn.bib["' + cn.uid + '"] when processing\n' + str(thisSrc))
 					thisSrcI = thisSrc.index[0]
+			elif src == '':
+				thisTgt = tgt.split(' | ')
+				if translator is not None:
+					thisTgt = translator(thisTgt)
+					if thisTgt == 0:
+						badEntries.append(str(reader.line_num) + '  ' + tgt)
+						continue
+				thisTgt = pd.Series(dict(zip(bibcols, thisTgt)), index=bibcols)
+				cn.update(thisTgt, updateCit=True, src=thisSrcI)
 			else:
 				raise ValueError('Bad row at', reader.line_num, 'in', csvname)
 		print('\tReading row ' + str(reader.line_num))
