@@ -86,9 +86,7 @@ class citnet:
 			slurpBibTex(self, bibtex, bibcols=bibcols, refcols=refcols, tag_processors=bibTex_processors)
 
 			self.notUnique = [c for c in self.bib if c != self.uid]
-
-			print('Loaded bibTex.\nDropping', len(self.bib[self.bib.duplicated()]), 'duplicate rows in bib DataFrame.')
-			self.bib = self.bib.drop_duplicates()
+			
 			self.bib = self.bib.fillna('x')
 			self.cit = pd.DataFrame(columns=['src', 'tgt'], dtype='int')
 			self.graph = makeGraph(self.bib, self.cit, self.uid)
