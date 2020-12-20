@@ -117,7 +117,7 @@ def slurp_bibtex(cn, bibTexFilename, refcols, bibcols=None, tag_processors=None)
 
 	#return(bib)
 
-def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, separator=' | ', translator=None):
+def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_separator=' | ', translator=None):
 	'''
 	Read a CSV file that contains reference data. File should have two
 	columns and every row should have data in at most one column. If a
@@ -135,7 +135,7 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, separat
 		,paper that references or is referenced by bib paper 2
 
 	Values in column two are single strings containing data separated
-	by the separator parameter (default ' | ').
+	by the csv_separator parameter (default ' | ').
 
 	Parameters
 	----------
@@ -165,7 +165,7 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, separat
 		the bib DataFrame. If False, add sources in the csv file to
 		the bibliography if not already listed. Default False.
 	
-	separator : string
+	csv_separator : string
 		separator between bibliography fields listed for each citation
 		in the csv file.
 
@@ -216,7 +216,7 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, separat
 						raise RuntimeError('Found repeated values in cn.bib["' + cn.uid + '"] when processing\n' + str(thisSrc))
 					thisSrcI = thisSrc.index[0]
 			elif src == '':
-				thisTgt = tgt.split(' | ')
+				thisTgt = tgt.split(csv_separator)
 				if translator is not None:
 					thisTgt = translator(thisTgt)
 					if thisTgt == 0:
