@@ -6,7 +6,7 @@ from .util import bibUpdate
 from .util import getBibtexTags
 from .util import refToBib
 
-def slurpBibTex(cn, bibTexFilename, bibCols=None, refCols='title', tag_processors=None):
+def slurpBibTex(cn, bibTexFilename, bibcols=None, refCols='title', tag_processors=None):
 	'''
 	Read a BibTex file and create a pandas DataFrame for the
 	bibliography.
@@ -16,7 +16,7 @@ def slurpBibTex(cn, bibTexFilename, bibCols=None, refCols='title', tag_processor
 	bibTexFilename : string
 		Name of a file containing BibTex data
 
-	bibCols : list-like
+	bibcols : list-like
 		Labels of columns the bibliography will contain. If None, the
 		bibliography will contain columns for every tag in the BibTex
 		file.
@@ -47,20 +47,20 @@ def slurpBibTex(cn, bibTexFilename, bibCols=None, refCols='title', tag_processor
 	'''
 	texTags = getBibtexTags(bibTexFilename)
 
-	if bibCols is None:
-		bibCols = texTags
+	if bibcols is None:
+		bibcols = texTags
 
-	if (type(refCols) == str) and (refCols not in bibCols):
-		raise ValueError('If using an existing column instead of a "ref" column, refCols must be in bibCols.')
+	if (type(refCols) == str) and (refCols not in bibcols):
+		raise ValueError('If using an existing column instead of a "ref" column, refCols must be in bibcols.')
 
-	if not all([c in texTags for c in bibCols]):
+	if not all([c in texTags for c in bibcols]):
 
 		if tag_processors is None:
-			if not any([c in texTags for c in bibCols]):
-				raise ValueError('bibCols contains no values which are tags in the bibTex file, but no translation dictionary was given.')
+			if not any([c in texTags for c in bibcols]):
+				raise ValueError('bibcols contains no values which are tags in the bibTex file, but no translation dictionary was given.')
 			else: 
 				tags_to_process = []
-				print('No bibTex tag translators given. bibliography columns not listed as tags in the bibTex file:\n\t', [c for c in bibCols if c not in texTags], '\n')
+				print('No bibTex tag translators given. bibliography columns not listed as tags in the bibTex file:\n\t', [c for c in bibcols if c not in texTags], '\n')
 		else:
 			if not all([t in texTags for t in tag_processors.keys()]):
 				raise ValueError('tag_processors contains keys which are not tags in the bibTex file.')
@@ -76,9 +76,9 @@ def slurpBibTex(cn, bibTexFilename, bibCols=None, refCols='title', tag_processor
 			else:
 				print('bibTex tag translator found:', tag, '->', tag_processors[tag][0])
 				translated.append(tag_processors[tag][0])
-		print('bibliography columns not translated from bibTex data:', [c for c in bibCols if c not in translated], '\n')
+		print('bibliography columns not translated from bibTex data:', [c for c in bibcols if c not in translated], '\n')
 
-	#bib = pd.DataFrame(columns=bibCols, dtype='str')
+	#bib = pd.DataFrame(columns=bibcols, dtype='str')
 			
 	for texEntry in open(bibTexFilename, encoding='utf8').read().split('@')[1:]:
 		
@@ -106,7 +106,7 @@ def slurpBibTex(cn, bibTexFilename, bibCols=None, refCols='title', tag_processor
 							bibEntry[processor[0]] = processor[1](item)
 					else:
 						bibEntry[thisTag[0]] = thisTag[1](item)
-				elif tag in bibCols:
+				elif tag in bibcols:
 					bibEntry[tag] = item
 
 		if type(refCols) != str:
@@ -116,7 +116,7 @@ def slurpBibTex(cn, bibTexFilename, bibCols=None, refCols='title', tag_processor
 					bibEntry['ref'] += bibEntry[key] + ' '
 			bibEntry['ref'] = bibEntry['ref'][:-1]
 
-		cn.update(pd.Series(bibEntry, index=bibCols))
+		cn.update(pd.Series(bibEntry, index=bibcols))
 
 	#return(bib)
 
@@ -190,7 +190,7 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', uid='ref', noNewSources
 	if direction not in ['incoming', 'outgoing']:
 		raise ValueError('slurpReferenceCSV needs direction "incoming" or "outgoing" to define sources and targets in cit DataFrame.\n\tGot ' + str(direction))
 
-	bibCols = bib.columns
+	bibcols = bib.columns
 	oldSources = bib[uid].copy()
 
 	with open(csvname, 'r', encoding='utf-8') as f:
@@ -216,13 +216,13 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', uid='ref', noNewSources
 					if thisTgt == 0:
 						badEntries.append(str(reader.line_num) + '  ' + tgt)
 						continue
-				thisTgt = pd.Series(dict(zip(bibCols, thisTgt)), index=bibCols)
+				thisTgt = pd.Series(dict(zip(bibcols, thisTgt)), index=bibcols)
 				cn.update(thisTgt, updateCit=True, src=thisSrcI)
 			elif (tgt == ''): 
 				if not (oldSources == src).any():
 					if noNewSources:
 						raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
-					cn.update(refToBib(src, bibCols, cn.refCols))
+					cn.update(refToBib(src, bibcols, cn.refCols))
 				thisSrc = bib[bib[uid] == src]
 				if len(thisSrc) > 1:
 					raise RuntimeError('Found repeated values in bib["' + uid + '"] when processing\n' + str(thisSrc))
