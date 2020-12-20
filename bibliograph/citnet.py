@@ -57,7 +57,9 @@ class CitNet:
         bibtex_parsers is a dictionary with format
 
             {tag:[col, function_to_process_bibtex]}
+
         or
+
             {tag:[[col1, function1_to_process_bibtex],
                   [col2, function2_to_process_bibtex]]}
 
