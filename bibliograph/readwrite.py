@@ -223,10 +223,11 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', noNewSources=False, sep
 					if noNewSources:
 						raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
 					cn.update(refToBib(src, bibcols, cn.refcols))
-				thisSrc = bib[bib[uid] == src]
-				if len(thisSrc) > 1:
-					raise RuntimeError('Found repeated values in bib["' + uid + '"] when processing\n' + str(thisSrc))
-				thisSrcI = thisSrc.index[0]
+				else:
+					thisSrc = bib[bib[uid] == src]
+					if len(thisSrc) > 1:
+						raise RuntimeError('Found repeated values in bib["' + uid + '"] when processing\n' + str(thisSrc))
+					thisSrcI = thisSrc.index[0]
 			else:
 				raise ValueError('Bad row at', reader.line_num, 'in', csvname)
 		print('\tReading row ' + str(reader.line_num))
