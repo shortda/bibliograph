@@ -3,7 +3,7 @@ import pandas as pd
 from .util import getBibtexTags
 from .util import refToBib
 
-def slurp_bibtex(cn, bibtex, refcols, bibcols=None, tag_processors=None):
+def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 	'''
 	Read a BibTex file and create a pandas DataFrame for the
 	bibliography.
@@ -23,8 +23,8 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, tag_processors=None):
 		create a unique reference string for each row. If string, must
 		contain a column label. Defaults to 'title'.
 
-	tag_processors : dictionary
-		tag_processors is a dictionary with format 
+	bibtex_parsers : dictionary
+		bibtex_parsers is a dictionary with format 
 		
 			{bibTexTag:[columnName, function_to_process_bibTex]}
 		or
@@ -52,27 +52,27 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, tag_processors=None):
 
 	if not all([c in texTags for c in bibcols]):
 
-		if tag_processors is None:
+		if bibtex_parsers is None:
 			if not any([c in texTags for c in bibcols]):
 				raise ValueError('bibcols contains no values which are tags in the bibTex file, but no translation dictionary was given.')
 			else: 
 				tags_to_process = []
 				print('No bibTex tag translators given. bibliography columns not listed as tags in the bibTex file:\n\t', [c for c in bibcols if c not in texTags], '\n')
 		else:
-			if not all([t in texTags for t in tag_processors.keys()]):
-				raise ValueError('tag_processors contains keys which are not tags in the bibTex file.')
-			tags_to_process = tag_processors.keys()
+			if not all([t in texTags for t in bibtex_parsers.keys()]):
+				raise ValueError('bibtex_parsers contains keys which are not tags in the bibTex file.')
+			tags_to_process = bibtex_parsers.keys()
 			translated = []
 
 		for tag in tags_to_process:
-			processor = tag_processors[tag]
+			processor = bibtex_parsers[tag]
 			if type(processor[0]) is not str:
 				for thisProcessor in processor:
 					print('bibTex tag translator found:', tag, '->', thisProcessor[0])
 					translated.append(thisProcessor[0])
 			else:
-				print('bibTex tag translator found:', tag, '->', tag_processors[tag][0])
-				translated.append(tag_processors[tag][0])
+				print('bibTex tag translator found:', tag, '->', bibtex_parsers[tag][0])
+				translated.append(bibtex_parsers[tag][0])
 		print('bibliography columns not translated from bibTex data:', [c for c in bibcols if c not in translated], '\n')
 
 	#bib = pd.DataFrame(columns=bibcols, dtype='str')
@@ -97,7 +97,7 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, tag_processors=None):
 					item = item[:-1]
 
 				if tag in tags_to_process:
-					thisTag = tag_processors[tag]
+					thisTag = bibtex_parsers[tag]
 					if type(thisTag[0]) is not str:
 						for processor in thisTag:
 							bibEntry[processor[0]] = processor[1](item)
