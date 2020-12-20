@@ -25,7 +25,7 @@ class citnet:
 	bibtex : string
 		Name of BibTex file containing the bibliography
 
-	bibCols : list-like
+	bibcols : list-like
 		List of labels for bibliography columns
 
 	refCols : list-like OR string
@@ -49,7 +49,7 @@ class citnet:
 
 	'''
 	# TODO : make abbr an attribute of the citation network?
-	def __init__(self, fileprefix=None, bibtex=None, data=None, index=None, bibcols=None, bibtex=None, bibCols=None, refcols='title', bibTex_processors=None):
+	def __init__(self, fileprefix=None, bibtex=None, data=None, index=None, bibcols=None, bibtex=None, bibcols=None, refcols='title', bibTex_processors=None):
 
 		self.bib = pd.DataFrame(data=data, index=index, columns=bibcols, dtype=str)
 
@@ -83,7 +83,7 @@ class citnet:
 		if bibtex is not None:
 			if (fileprefix is not None):
 				raise ValueError('citnet is initialized with exactly one of bibtex or fileprefix. Got both.')
-			slurpBibTex(self, bibtex, bibCols=bibCols, refCols=refCols, tag_processors=bibTex_processors)
+			slurpBibTex(self, bibtex, bibcols=bibcols, refCols=refCols, tag_processors=bibTex_processors)
 
 			self.notUnique = [c for c in self.bib if c != self.uid]
 
