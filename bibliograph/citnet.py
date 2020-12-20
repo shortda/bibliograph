@@ -72,7 +72,7 @@ class citnet:
 				bibtex = None
 
 		if bibtex is not None:
-			self.bib = slurpBibTex(self, bibtex, bibCols=bibCols, refCols=refCols, tag_processors=bibTex_processors)
+			slurpBibTex(self, bibtex, bibCols=bibCols, refCols=refCols, tag_processors=bibTex_processors)
 
 			self.notUnique = [c for c in self.bib if c != self.uid]
 
