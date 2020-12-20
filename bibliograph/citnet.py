@@ -49,7 +49,9 @@ class citnet:
 
 	'''
 	# TODO : make abbr an attribute of the citation network?
-	def __init__(self, name, bibtex=None, bibCols=None, refCols='title', bibTex_processors=None):
+	def __init__(self, data=None, index=None, bibcols=None, bibtex=None, bibCols=None, refcols='title', bibTex_processors=None):
+
+		self.bib = pd.DataFrame(data=data, index=index, columns=bibcols, dtype=str)
 
 		self.name = name
 		self.refCols = refCols
