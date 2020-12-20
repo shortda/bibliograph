@@ -117,7 +117,7 @@ def slurp_bibtex(cn, bibTexFilename, refcols, bibcols=None, tag_processors=None)
 
 	#return(bib)
 
-def slurpReferenceCSV(cn, csvname, direction='outgoing', noNewSources=False, separator=' | ', translator=None):
+def slurp_csv(cn, csvname, direction='outgoing', noNewSources=False, separator=' | ', translator=None):
 	'''
 	Read a CSV file that contains reference data. File should have two
 	columns and every row should have data in at most one column. If a
