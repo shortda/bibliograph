@@ -184,7 +184,7 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', noNewSources=False, sep
 		columns in the bibliography.
 	'''
 	print('\tSlurping file ' + csvname)
-	bib = cn.bib.copy()
+	bib = cn.bib
 	uid = cn.uid
 
 	if direction not in ['incoming', 'outgoing']:
