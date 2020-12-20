@@ -20,7 +20,7 @@ class citnet:
 	Parameters
 	----------
 	name : string
-		Internal identifier, mostly used for reading and storing files
+		prefix 
 
 	bibtex : string
 		Name of BibTex file containing the bibliography
@@ -49,29 +49,40 @@ class citnet:
 
 	'''
 	# TODO : make abbr an attribute of the citation network?
-	def __init__(self, data=None, index=None, bibcols=None, bibtex=None, bibCols=None, refcols='title', bibTex_processors=None):
+	def __init__(self, fileprefix=None, bibtex=None, data=None, index=None, bibcols=None, bibtex=None, bibCols=None, refcols='title', bibTex_processors=None):
 
 		self.bib = pd.DataFrame(data=data, index=index, columns=bibcols, dtype=str)
 
-		self.name = name
 		self.refCols = refCols
 		if type(refCols) == str:
 			self.uid = refCols
 		else:
 			self.uid = 'ref'
 
-		checkBib = isfile(name + '-bib.json')
-		checkCit = isfile(name + '-cit.json')
-		checkGraph = isfile(name + '.graphml')
+		if fileprefix is not None:
+			if (bibtex is not None):
+				raise ValueError('citnet is initialized with exactly one of bibtex or fileprefix. Got both.')
+			checkBib = isfile(fileprefix + '-bib.json')
+			checkCit = isfile(fileprefix + '-cit.json')
+			checkGraph = isfile(fileprefix + '.graphml')
 
-		if any([checkBib, checkCit, checkGraph]) and (bibtex is not None):
-
-			print('Given bibTex filename ' + bibtex + ' but also found JSON files stored for network named ' + name + '.')
-			answer = input('\n\tEnter y to load network from bibTex, anything else to load network from JSON files.')
-			if (answer != 'y') and (answer != 'Y'):
-				bibtex = None
+			if all([checkBib, checkCit, checkGraph]):
+				self.bib = pd.read_json(fileprefix + '-bib.json')
+				self.cit = pd.read_json(fileprefix + '-cit.json')
+				self.graph = nx.read_graphml(fileprefix + '.graphml')
+				self.notUnique = [c for c in self.bib if c != self.uid]
+				print('\nNetwork loaded from disk.\n')
+			elif not any([checkBib, checkCit, checkGraph]):
+				print('\nGot file prefix ' + fileprefix + ' but did not find any JSON files.\nCreating blank network.\n')
+				self.bib = pd.DataFrame()
+				self.cit = pd.DataFrame(columns=['src', 'tgt'], dtype='int')
+				self.notUnique = []
+			else:
+				raise RuntimeError('\nFound at least one stored file for bib, cit, or graph, but did not find all three.')
 
 		if bibtex is not None:
+			if (fileprefix is not None):
+				raise ValueError('citnet is initialized with exactly one of bibtex or fileprefix. Got both.')
 			slurpBibTex(self, bibtex, bibCols=bibCols, refCols=refCols, tag_processors=bibTex_processors)
 
 			self.notUnique = [c for c in self.bib if c != self.uid]
@@ -81,20 +92,6 @@ class citnet:
 			self.bib = self.bib.fillna('x')
 			self.cit = pd.DataFrame(columns=['src', 'tgt'], dtype='int')
 			self.graph = makeGraph(self.bib, self.cit, self.uid)
-		else:
-			if all([checkBib, checkCit, checkGraph]):
-				self.bib = pd.read_json(name + '-bib.json')
-				self.cit = pd.read_json(name + '-cit.json')
-				self.graph = nx.read_graphml(name + '.graphml')
-				self.notUnique = [c for c in self.bib if c != self.uid]
-				print('\nNetwork loaded from disk.\n')
-			elif not any([checkBib, checkCit, checkGraph]):
-				print('\nGot no bibTex filename and did not find any JSON files.\nCreating blank network.\n')
-				self.bib = pd.DataFrame()
-				self.cit = pd.DataFrame(columns=['src', 'tgt'], dtype='int')
-				self.notUnique = []
-			else:
-				raise RuntimeError('\nFound at least one stored file for bib, cit, or graph, but did not find all three.')
 
 	def update(self, newEntry, updateCit=False, src=None):
 		'''
@@ -145,21 +142,16 @@ class citnet:
 		print('Loading data from ' + filename)
 		slurpReferenceCSV(self, filename, **kwargs)
 
-	def writeNetwork(self, fileRoot=None):
+	def writeNetwork(self, name):
 		'''
 		Write JSON files representing the bibliography and citation
 		DataFrames. Write a graphml file representing the graph.
 
 		Parameters
 		----------
-		fileRoot : string
-			Optionally provide the beginning of the filename. If None,
-			use the name attribute of the citnet object.
+		name : string
+			Network name will be the prefix for all stored filenames.
 		'''
-		if fileRoot is not None:
-			name = fileRoot
-		else: 
-			name = self.name
 
 		backup(name + '-bib.json')
 		self.bib.to_json(name + '-bib.json')
