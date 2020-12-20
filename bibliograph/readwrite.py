@@ -117,7 +117,7 @@ def slurp_bibtex(cn, bibTexFilename, refcols, bibcols=None, tag_processors=None)
 
 	#return(bib)
 
-def slurp_csv(cn, csvname, direction='outgoing', noNewSources=False, separator=' | ', translator=None):
+def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, separator=' | ', translator=None):
 	'''
 	Read a CSV file that contains reference data. File should have two
 	columns and every row should have data in at most one column. If a
@@ -206,7 +206,7 @@ def slurp_csv(cn, csvname, direction='outgoing', noNewSources=False, separator='
 				raise ValueError('Found row with no data at line ' + str(reader.line_num) + ' in ' + csvname)
 			elif (tgt == ''): 
 				if not (oldSources == src).any():
-					if noNewSources:
+					if not sources_from_csv:
 						raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
 					cn.update(refToBib(src, bibcols, cn.refcols))
 					thisSrcI = cn.bib.index[-1]
