@@ -184,14 +184,12 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', noNewSources=False, sep
 		columns in the bibliography.
 	'''
 	print('\tSlurping file ' + csvname)
-	bib = cn.bib
-	uid = cn.uid
 
 	if direction not in ['incoming', 'outgoing']:
 		raise ValueError('slurpReferenceCSV needs direction "incoming" or "outgoing" to define sources and targets in cit DataFrame.\n\tGot ' + str(direction))
 
-	bibcols = bib.columns
-	oldSources = bib[uid].copy()
+	bibcols = cn.bib.columns
+	oldSources = cn.bib[cn.uid].copy()
 
 	with open(csvname, 'r', encoding='utf-8') as f:
 		reader = csv.reader(f, delimiter=',')
@@ -223,11 +221,11 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', noNewSources=False, sep
 					if noNewSources:
 						raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
 					cn.update(refToBib(src, bibcols, cn.refcols))
-					thisSrcI = bib.index[-1]
+					thisSrcI = cn.bib.index[-1]
 				else:
-					thisSrc = bib[bib[uid] == src]
+					thisSrc = cn.bib[cn.bib[cn.uid] == src]
 					if len(thisSrc) > 1:
-						raise RuntimeError('Found repeated values in bib["' + uid + '"] when processing\n' + str(thisSrc))
+						raise RuntimeError('Found repeated values in cn.bib["' + cn.uid + '"] when processing\n' + str(thisSrc))
 					thisSrcI = thisSrc.index[0]
 			else:
 				raise ValueError('Bad row at', reader.line_num, 'in', csvname)
