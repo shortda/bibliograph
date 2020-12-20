@@ -42,7 +42,7 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 	if bibcols is None:
 		bibcols = textags
 
-	if (type(refcols) == str):
+	if type(refcols) == str:
 		if refcols not in bibcols:
 			raise ValueError('If using an existing column instead of a "ref" column, refcols must be in bibcols.')
 		else:
