@@ -36,11 +36,6 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 		tag should be stored, and the functions translate the text of
 		the BibTex entry into a value that should be stored in the 
 		bibliography column
-
-	Returns
-	-------
-	bib : pd.DataFrame
-		The bibliography
 	'''
 	textags = getBibtexTags(bibtex)
 
@@ -75,8 +70,6 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 				print('bibTex tag translator found:', tag, '->', bibtex_parsers[tag][0])
 				translated.append(bibtex_parsers[tag][0])
 		print('bibliography columns not translated from bibTex data:', [c for c in bibcols if c not in translated], '\n')
-
-	#bib = pd.DataFrame(columns=bibcols, dtype='str')
 			
 	for texEntry in open(bibtex, encoding='utf8').read().split('@')[1:]:
 		
@@ -115,8 +108,6 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 			bibEntry['ref'] = bibEntry['ref'][:-1]
 
 		cn.update(pd.Series(bibEntry, index=bibcols))
-
-	#return(bib)
 
 def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_separator=' | ', csv_parser=None):
 	'''
