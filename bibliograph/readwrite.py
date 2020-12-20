@@ -223,6 +223,7 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', noNewSources=False, sep
 					if noNewSources:
 						raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
 					cn.update(refToBib(src, bibcols, cn.refcols))
+					thisSrcI = bib.index[-1]
 				else:
 					thisSrc = bib[bib[uid] == src]
 					if len(thisSrc) > 1:
