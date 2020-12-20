@@ -52,6 +52,7 @@ class citnet:
 	def __init__(self, data=None, index=None, bibcols=None, bibtex=None, csv=None, fileprefix=None, refcols='title', bibTex_processors=None, direction='outgoing', uid='ref', noNewSources=False, separator=' | ', translator=None):
 
 		self.bib = pd.DataFrame(data=data, index=index, columns=bibcols, dtype=str)
+		self.cit = pd.DataFrame(columns=['src', 'tgt'], dtype='int')
 
 		self.refcols = refcols
 		if type(refcols) == str:
@@ -67,7 +68,6 @@ class citnet:
 			self.notUnique = [c for c in self.bib if c != self.uid]
 
 			self.bib = self.bib.fillna('x')
-			self.cit = pd.DataFrame(columns=['src', 'tgt'], dtype='int')
 			self.graph = makeGraph(self.bib, self.cit, self.uid)
 
 		if csv is not None:
@@ -89,11 +89,6 @@ class citnet:
 				self.graph = nx.read_graphml(fileprefix + '.graphml')
 				self.notUnique = [c for c in self.bib if c != self.uid]
 				print('\nNetwork loaded from disk.\n')
-			elif not any([checkBib, checkCit, checkGraph]):
-				print('\nGot file prefix ' + fileprefix + ' but did not find any JSON files.\nCreating blank network.\n')
-				self.bib = pd.DataFrame()
-				self.cit = pd.DataFrame(columns=['src', 'tgt'], dtype='int')
-				self.notUnique = []
 			else:
 				raise RuntimeError('\nFound at least one stored file for bib, cit, or graph, but did not find all three.')
 
