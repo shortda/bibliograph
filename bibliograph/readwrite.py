@@ -42,24 +42,25 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 	bib : pd.DataFrame
 		The bibliography
 	'''
-	texTags = getBibtexTags(bibtex)
+	textags = getBibtexTags(bibtex)
 
 	if bibcols is None:
-		bibcols = texTags
+		bibcols = textags
 
 	if (type(refcols) == str) and (refcols not in bibcols):
 		raise ValueError('If using an existing column instead of a "ref" column, refcols must be in bibcols.')
 
-	if not all([c in texTags for c in bibcols]):
+	if not all([c in textags for c in bibcols]):
 
 		if bibtex_parsers is None:
-			if not any([c in texTags for c in bibcols]):
-				raise ValueError('bibcols contains no values which are tags in the bibTex file, but no translation dictionary was given.')
+			if not any([c in textags for c in bibcols]):
+				raise ValueError('bibcols contains no values which are tags in the bibTex file, but no dictionaryof parsers was given.')
 			else: 
 				tags_to_process = []
-				print('No bibTex tag translators given. bibliography columns not listed as tags in the bibTex file:\n\t', [c for c in bibcols if c not in texTags], '\n')
+				print('No bibtex tag parsers given. bibliography columns not listed as tags in the bibTex file:')
+				print('\t', [c for c in bibcols if c not in textags], '\n')
 		else:
-			if not all([t in texTags for t in bibtex_parsers.keys()]):
+			if not all([t in textags for t in bibtex_parsers.keys()]):
 				raise ValueError('bibtex_parsers contains keys which are not tags in the bibTex file.')
 			tags_to_process = bibtex_parsers.keys()
 			translated = []
