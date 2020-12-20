@@ -6,7 +6,7 @@ from .util import bibUpdate
 from .util import getBibtexTags
 from .util import refToBib
 
-def slurpBibTex(cn, bibTexFilename, bibcols=None, refcols='title', tag_processors=None):
+def slurp_bibtex(cn, bibTexFilename, refcols, bibcols=None, tag_processors=None):
 	'''
 	Read a BibTex file and create a pandas DataFrame for the
 	bibliography.
