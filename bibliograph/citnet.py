@@ -49,7 +49,7 @@ class citnet:
 
 	'''
 	# TODO : make abbr an attribute of the citation network?
-	def __init__(self, data=None, index=None, bibcols=None, bibtex=None, fileprefix=None, refcols='title', bibTex_processors=None):
+	def __init__(self, data=None, index=None, bibcols=None, bibtex=None, csv=None, fileprefix=None, refcols='title', bibTex_processors=None, direction='outgoing', uid='ref', noNewSources=False, separator=' | ', translator=None):
 
 		self.bib = pd.DataFrame(data=data, index=index, columns=bibcols, dtype=str)
 
@@ -59,9 +59,27 @@ class citnet:
 		else:
 			self.uid = 'ref'
 
+		if bibtex is not None:
+			if (csv is not None) or (fileprefix is not None):
+				raise ValueError('citnet is initialized with exactly one of bibtex, csv, or fileprefix. Got at values for at least two.')
+			slurpBibTex(self, bibtex, bibcols=bibcols, refcols=refcols, tag_processors=bibTex_processors)
+
+			self.notUnique = [c for c in self.bib if c != self.uid]
+
+			self.bib = self.bib.fillna('x')
+			self.cit = pd.DataFrame(columns=['src', 'tgt'], dtype='int')
+			self.graph = makeGraph(self.bib, self.cit, self.uid)
+
+		if csv is not None:
+			if (bibtex is not None) or (fileprefix is not None):
+				raise ValueError('citnet is initialized with exactly one of bibtex, csv, or fileprefix. Got at values for at least two.')
+			print('Loading data from ' + filename)
+			slurpReferenceCSV(self, csv, direction, noNewSources, separator, translator)
+
+
 		if fileprefix is not None:
-			if (bibtex is not None):
-				raise ValueError('citnet is initialized with exactly one of bibtex or fileprefix. Got both.')
+			if (bibtex is not None) or (csv is not None):
+				raise ValueError('citnet is initialized with exactly one of bibtex, csv, or fileprefix. Got at values for at least two.')
 			checkBib = isfile(fileprefix + '-bib.json')
 			checkCit = isfile(fileprefix + '-cit.json')
 			checkGraph = isfile(fileprefix + '.graphml')
@@ -79,17 +97,6 @@ class citnet:
 				self.notUnique = []
 			else:
 				raise RuntimeError('\nFound at least one stored file for bib, cit, or graph, but did not find all three.')
-
-		if bibtex is not None:
-			if (fileprefix is not None):
-				raise ValueError('citnet is initialized with exactly one of bibtex or fileprefix. Got both.')
-			slurpBibTex(self, bibtex, bibcols=bibcols, refcols=refcols, tag_processors=bibTex_processors)
-
-			self.notUnique = [c for c in self.bib if c != self.uid]
-			
-			self.bib = self.bib.fillna('x')
-			self.cit = pd.DataFrame(columns=['src', 'tgt'], dtype='int')
-			self.graph = makeGraph(self.bib, self.cit, self.uid)
 
 	def update(self, newEntry, updateCit=False, src=None):
 		'''
