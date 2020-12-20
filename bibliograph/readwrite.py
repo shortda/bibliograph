@@ -117,7 +117,7 @@ def slurp_bibtex(cn, bibTexFilename, refcols, bibcols=None, tag_processors=None)
 
 	#return(bib)
 
-def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_separator=' | ', translator=None):
+def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_separator=' | ', csv_parser=None):
 	'''
 	Read a CSV file that contains reference data. File should have two
 	columns and every row should have data in at most one column. If a
@@ -169,14 +169,14 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_sep
 		separator between bibliography fields listed for each citation
 		in the csv file.
 
-	translator : function
+	csv_parser : function
 		function that takes list of separated fields from a reference
 		listed in the csv file and returns a list-like object
 		containing values for all columns in the bibliography. If the
-		translator returns the single integer 0 then the translator
+		parser returns the single integer 0 then the parser
 		found a bad entry in the csv file. Data about that line is
 		stored for reporting after references are slurped. If
-		translator is None, script assumes reference strings contain
+		parser is None, script assumes reference strings contain
 		data for all bibliography columns listed in the order of
 		columns in the bibliography.
 	'''
@@ -217,8 +217,8 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_sep
 					thisSrcI = thisSrc.index[0]
 			elif src == '':
 				thisTgt = tgt.split(csv_separator)
-				if translator is not None:
-					thisTgt = translator(thisTgt)
+				if csv_parser is not None:
+					thisTgt = csv_parser(thisTgt)
 					if thisTgt == 0:
 						badEntries.append(str(reader.line_num) + '  ' + tgt)
 						continue
