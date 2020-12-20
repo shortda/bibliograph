@@ -68,9 +68,9 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 		for tag in tags_to_process:
 			processor = bibtex_parsers[tag]
 			if type(processor[0]) is not str:
-				for thisProcessor in processor:
-					print('bibTex tag translator found:', tag, '->', thisProcessor[0])
-					translated.append(thisProcessor[0])
+				for this_processor in processor:
+					print('bibTex tag translator found:', tag, '->', this_processor[0])
+					translated.append(this_processor[0])
 			else:
 				print('bibTex tag translator found:', tag, '->', bibtex_parsers[tag][0])
 				translated.append(bibtex_parsers[tag][0])
