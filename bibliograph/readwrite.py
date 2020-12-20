@@ -6,7 +6,7 @@ from .util import bibUpdate
 from .util import getBibtexTags
 from .util import refToBib
 
-def slurpBibTex(cn, bibTexFilename, bibcols=None, refCols='title', tag_processors=None):
+def slurpBibTex(cn, bibTexFilename, bibcols=None, refcols='title', tag_processors=None):
 	'''
 	Read a BibTex file and create a pandas DataFrame for the
 	bibliography.
@@ -21,7 +21,7 @@ def slurpBibTex(cn, bibTexFilename, bibcols=None, refCols='title', tag_processor
 		bibliography will contain columns for every tag in the BibTex
 		file.
 
-	refCols : list-like OR string
+	refcols : list-like OR string
 		Labels of columns whose values should be joined by spaces to
 		create a unique reference string for each row. If string, must
 		contain a column label. Defaults to 'title'.
@@ -50,8 +50,8 @@ def slurpBibTex(cn, bibTexFilename, bibcols=None, refCols='title', tag_processor
 	if bibcols is None:
 		bibcols = texTags
 
-	if (type(refCols) == str) and (refCols not in bibcols):
-		raise ValueError('If using an existing column instead of a "ref" column, refCols must be in bibcols.')
+	if (type(refcols) == str) and (refcols not in bibcols):
+		raise ValueError('If using an existing column instead of a "ref" column, refcols must be in bibcols.')
 
 	if not all([c in texTags for c in bibcols]):
 
@@ -109,9 +109,9 @@ def slurpBibTex(cn, bibTexFilename, bibcols=None, refCols='title', tag_processor
 				elif tag in bibcols:
 					bibEntry[tag] = item
 
-		if type(refCols) != str:
+		if type(refcols) != str:
 			bibEntry['ref'] = ''
-			for key in refCols:
+			for key in refcols:
 				if key in bibEntry.keys():
 					bibEntry['ref'] += bibEntry[key] + ' '
 			bibEntry['ref'] = bibEntry['ref'][:-1]
@@ -222,7 +222,7 @@ def slurpReferenceCSV(cn, csvname, direction='outgoing', uid='ref', noNewSources
 				if not (oldSources == src).any():
 					if noNewSources:
 						raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
-					cn.update(refToBib(src, bibcols, cn.refCols))
+					cn.update(refToBib(src, bibcols, cn.refcols))
 				thisSrc = bib[bib[uid] == src]
 				if len(thisSrc) > 1:
 					raise RuntimeError('Found repeated values in bib["' + uid + '"] when processing\n' + str(thisSrc))

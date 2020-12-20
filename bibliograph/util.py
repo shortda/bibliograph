@@ -181,9 +181,9 @@ def bibUpdate(bib, newEntry, uid):
 	else:
 		return(updateResult(False, newEntry))
 
-def refToBib(refString, bibcols, refCols):
-	if refString.count(' ') != len(refCols)-1:
-		raise ValueError("ref string contains fewer values than refCols. Can't convert to series for bib entry")
-	entryDict = dict(zip(refCols, refString.split(' ')))
+def refToBib(refString, bibcols, refcols):
+	if refString.count(' ') != len(refcols)-1:
+		raise ValueError("ref string contains fewer values than refcols. Can't convert to series for bib entry")
+	entryDict = dict(zip(refcols, refString.split(' ')))
 	entryDict['ref'] = refString
 	return(pd.Series(entryDict, index=bibcols))

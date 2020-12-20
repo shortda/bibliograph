@@ -28,7 +28,7 @@ class citnet:
 	bibcols : list-like
 		List of labels for bibliography columns
 
-	refCols : list-like OR string
+	refcols : list-like OR string
 		Labels of columns whose values should be joined by spaces to
 		create a unique reference string for each row. If string, must
 		contain a column label. Defaults to 'title'.
@@ -53,9 +53,9 @@ class citnet:
 
 		self.bib = pd.DataFrame(data=data, index=index, columns=bibcols, dtype=str)
 
-		self.refCols = refCols
-		if type(refCols) == str:
-			self.uid = refCols
+		self.refcols = refcols
+		if type(refcols) == str:
+			self.uid = refcols
 		else:
 			self.uid = 'ref'
 
@@ -83,7 +83,7 @@ class citnet:
 		if bibtex is not None:
 			if (fileprefix is not None):
 				raise ValueError('citnet is initialized with exactly one of bibtex or fileprefix. Got both.')
-			slurpBibTex(self, bibtex, bibcols=bibcols, refCols=refCols, tag_processors=bibTex_processors)
+			slurpBibTex(self, bibtex, bibcols=bibcols, refcols=refcols, tag_processors=bibTex_processors)
 
 			self.notUnique = [c for c in self.bib if c != self.uid]
 
@@ -244,7 +244,7 @@ class citnet:
 			thisResult = results.loc[i, results.columns[:-1]].squeeze().copy()
 
 			if uid == 'ref':
-				thisResult[uid] = ' '.join([thisResult[c] for c in self.refCols if (thisResult[c] != 'x')])
+				thisResult[uid] = ' '.join([thisResult[c] for c in self.refcols if (thisResult[c] != 'x')])
 
 			self.update(thisResult, updateCit=True, src=srcID)
 
