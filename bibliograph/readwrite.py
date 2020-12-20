@@ -10,7 +10,7 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 	
 	Parameters
 	----------
-	bibTexFilename : string
+	bibtex : string
 		Name of a file containing BibTex data
 
 	bibcols : list-like
@@ -78,7 +78,7 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 
 	#bib = pd.DataFrame(columns=bibcols, dtype='str')
 			
-	for texEntry in open(bibTexFilename, encoding='utf8').read().split('@')[1:]:
+	for texEntry in open(bibtex, encoding='utf8').read().split('@')[1:]:
 		
 		bibEntry = {}
 		texEntry = texEntry.translate(str.maketrans('','','{}\t')).split('\n')
