@@ -73,7 +73,7 @@ class citnet:
 		if csv is not None:
 			if (bibtex is not None) or (fileprefix is not None):
 				raise ValueError('citnet is initialized with exactly one of bibtex, csv, or fileprefix. Got at values for at least two.')
-			print('Loading data from ' + filename)
+			print('Loading data from ' + csv)
 			slurpReferenceCSV(self, csv, direction, noNewSources, separator, translator)
 
 
