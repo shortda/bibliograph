@@ -150,10 +150,6 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_sep
 		the bib DataFrame (they're references TO papers in the
 		bibliogrpahy).
 
-	uid : string (probably)
-		Label of the column containing unique identifiers for each
-		bibliography entry.
-
 	noNewSources : boolean
 		If True, only get reference data for papers already listed in
 		the bib DataFrame. If False, add sources in the csv file to
@@ -180,7 +176,7 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_sep
 		raise ValueError('slurpReferenceCSV needs direction "incoming" or "outgoing" to define sources and targets in cit DataFrame.\n\tGot ' + str(direction))
 
 	bibcols = cn.bib.columns
-	old_sources = cn.bib[cn.uid].copy()
+	old_sources = cn.bib['ref'].copy()
 
 	with open(csvname, 'r', encoding='utf-8') as f:
 		reader = csv.reader(f, delimiter=',')
@@ -205,9 +201,9 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_sep
 					cn.update(refToBib(src, bibcols, cn.refcols))
 					this_src_idx = cn.bib.index[-1]
 				else:
-					this_src = cn.bib[cn.bib[cn.uid] == src]
+					this_src = cn.bib[cn.bib['ref'] == src]
 					if len(this_src) > 1:
-						raise RuntimeError('Found repeated values in cn.bib["' + cn.uid + '"] when processing\n' + str(this_src))
+						raise RuntimeError('Found repeated values in cn.bib["ref"] when processing\n' + str(this_src))
 					this_src_idx = this_src.index[0]
 			elif src == '':
 				this_tgt = tgt.split(csv_separator)
