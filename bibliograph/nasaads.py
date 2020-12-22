@@ -116,7 +116,7 @@ def confirm_ads_submission(queries):
 				return(False)
 		return(True)
 
-def queryADSbibcodes(sources, search_cols, ads_terms=None, query_mask=None):
+def query_bibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 	'''
 	Get ADS bibcodes for papers in the sources DataFrame
 
@@ -157,7 +157,7 @@ def queryADSbibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 	queries.insert(len(queries.columns), 'bibcode', ['']*len(queries))
 
 	if len(queries) == 0:
-		print('queryADSbibcodes created no query strings')
+		print('query_bibcodes created no query strings')
 		return ((queries, bad_queries))
 
 	if confirm_ads_submission(queries):
