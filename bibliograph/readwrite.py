@@ -111,7 +111,7 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 
 		cn.update(pd.Series(bibentry, index=bibcols))
 
-def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_separator=' | ', csv_parser=None):
+def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=True, csv_separator=' | ', csv_parser=None):
 	'''
 	Read a CSV file that contains reference data. File should have two
 	columns and every row should have data in at most one column. If a
@@ -150,10 +150,10 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_sep
 		the bib DataFrame (they're references TO papers in the
 		bibliogrpahy).
 
-	noNewSources : boolean
-		If True, only get reference data for papers already listed in
-		the bib DataFrame. If False, add sources in the csv file to
-		the bibliography if not already listed. Default False.
+	sources_from_csv : boolean
+		If True, add sources in the csv file tothe bibliography if not
+		already listed. If False, raise error when a sources is found
+		in the csv file but not in the bibliography. Default True.
 	
 	csv_separator : string
 		separator between bibliography fields listed for each citation
