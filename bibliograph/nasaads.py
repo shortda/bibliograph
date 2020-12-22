@@ -3,7 +3,7 @@ import progressbar
 from datetime import datetime
 import pandas as pd
 
-def makeQueries(sources, searchColumns, adsTerms=None, toQuery=None, wrapper=None):
+def make_queries(sources, searchColumns, adsTerms=None, toQuery=None, wrapper=None):
 	'''
 	Make strings that represent ADS search queries
 
@@ -156,7 +156,7 @@ def queryADSbibcodes(sources, searchColumns, adsTerms=None, toQuery=None):
 		values in columns to be searched either contained spaces or 
 		were 'x'.	
 	'''
-	queries, badQueries = makeQueries(sources, searchColumns, adsTerms=adsTerms, toQuery=toQuery)
+	queries, badQueries = make_queries(sources, searchColumns, adsTerms=adsTerms, toQuery=toQuery)
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 	queries.insert(len(queries.columns), 'bibcode', ['']*len(queries))
 
@@ -263,7 +263,7 @@ def queryADS(sources, searchColumns, fetchTerms, adsTerms=None, fetchColumns=Non
 	if type(fetchColumns) == str:
 		fetchColumns = [fetchColumns]
 
-	queries, badQueries = makeQueries(sources, searchColumns, adsTerms=adsTerms, toQuery=toQuery, wrapper=wrapper)
+	queries, badQueries = make_queries(sources, searchColumns, adsTerms=adsTerms, toQuery=toQuery, wrapper=wrapper)
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 
 	if fetchColumns is None:
