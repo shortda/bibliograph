@@ -182,7 +182,7 @@ def query_bibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 
 	return((queries, bad_queries))
 
-def queryADS(sources, search_cols, fetch_terms, ads_terms=None, fetch_cols=None, query_mask=None, wrapper='references', articleProcessor=None):
+def submit_ads_queries(sources, search_cols, fetch_terms, ads_terms=None, fetch_cols=None, query_mask=None, wrapper='references', articleProcessor=None):
 	'''
 	Submit API queries to NASA/ADS.
 
@@ -272,7 +272,7 @@ def queryADS(sources, search_cols, fetch_terms, ads_terms=None, fetch_cols=None,
 	results = pd.DataFrame(columns=theseColumns)
 
 	if len(queries) == 0:
-		print('queryADS created no query strings')
+		print('submit_ads_queries created no query strings')
 		return((results, queries, bad_queries))
 
 	if articleProcessor is None:
