@@ -42,11 +42,7 @@ def make_queries(sources, search_cols, ads_terms=None, query_mask=None, wrapper=
 		were 'x'.
 	'''
 	if query_mask is not None:
-		thisIndex = sources[query_mask].index
-	else:
-		thisIndex = sources.index
-
-	print('Making ADS query strings for\n', sources.loc[thisIndex], '\n')
+		sources = sources[query_mask]
 
 	if ads_terms is not None:
 		fields = [[c, ads_terms[i]] for i,c in enumerate(search_cols)]
@@ -59,7 +55,7 @@ def make_queries(sources, search_cols, ads_terms=None, query_mask=None, wrapper=
 	if len(queries) == 0:
 		return((queries, badQueries))
 
-	for i in thisIndex:
+	for i in sources.index:
 		query = []
 		
 		for f in fields:
