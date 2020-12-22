@@ -173,6 +173,7 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=True, csv_sepa
 	print('\tSlurping file ' + csvname)
 
 	if direction not in ['incoming', 'outgoing']:
+
 		raise ValueError('slurp_csv needs direction "incoming" or "outgoing" to define sources and targets in cit DataFrame.\n\tGot ' + str(direction))
 
 	bibcols = cn.bib.columns
@@ -181,6 +182,23 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=True, csv_sepa
 	with open(csvname, 'r', encoding='utf-8') as f:
 		reader = csv.reader(f, delimiter=',')
 		bad_entries = []
+
+		if len(bibcols) == 0:
+			bibcols = next(f).split(',')
+			if len(bibcols) == 1:
+				raise ValueError('slurp_csv got an empty bibliography but the first line of ' + csvname + ' contains only one value.')
+			refcols = next(f).split(',')
+			if len(refcols) == 1:
+				raise ValueError('slurp_csv got an empty bibliography but the second line of ' + csvname + ' contains only one value.')
+			print('slurp_csv got an empty bibliography. created the following from top two lines in ' + csvname)
+			cn.bib = pd.DataFrame(columns=bibcols)
+			cn.refcols = refcols
+			print(cn.describe())
+			print('refcols = ', refcols)
+		else:
+			print('slurp_csv got a bibliography with columns')
+			print('\t', bibcols)
+
 		for row in reader:
 			print('\tReading row ' + str(reader.line_num), end='\r')
 			if direction == 'outgoing':
@@ -218,5 +236,11 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=True, csv_sepa
 				raise ValueError('Bad row at', reader.line_num, 'in', csvname)
 				
 		print('\tReading row ' + str(reader.line_num))
+
 		if len(bad_entries) != 0:
+
 			raise ValueError('Found ' + str(len(bad_entries)) + ' bad entries in csv file:\n\t' + '\n\t'.join(bad_entries))	
+
+		cn.convert_dtypes()
+		print('Converted dtypes in the bibliography. Description:')
+		print(cn.describe(), '\n')
