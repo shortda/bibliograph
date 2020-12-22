@@ -165,9 +165,9 @@ def query_bibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 		#set up and start a progress bar
 		widgets = ['Queries: ', progressbar.Percentage(),' ', progressbar.Bar(marker='='),'|', progressbar.Timer(),]
 		bar = progressbar.ProgressBar(widgets=widgets, maxval=(len(queries)-1)).start()
-		qIndex = list(queries.index)
+		qindex = list(queries.index)
 
-		for i in qIndex:
+		for i in qindex:
 			q = queries.loc[i, 'query']
 			search = ads.SearchQuery(q=q, fl='bibcode')
 			try:
@@ -176,7 +176,7 @@ def query_bibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 				queries.to_json('queries.json')
 			queries.loc[i, 'ADSarticles'] = search.articles
 			queries.loc[i, 'bibcode'] = ' '.join(list(map(lambda x: x.bibcode, search.articles)))
-			bar.update(qIndex.index(i))
+			bar.update(qindex.index(i))
 
 		bar.finish()
 
@@ -283,9 +283,9 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 		#set up and start a progress bar
 		widgets = ['Queries: ', progressbar.Percentage(),' ', progressbar.Bar(marker='='),'|', progressbar.Timer(),]
 		bar = progressbar.ProgressBar(widgets=widgets, maxval=(len(queries)-1)).start()
-		qIndex = list(queries.index)
+		qindex = list(queries.index)
 
-		for i in qIndex:
+		for i in qindex:
 			q = queries.loc[i, 'query']
 			search = ads.SearchQuery(q=q, fl=fetchTerms)
 			try:
@@ -299,7 +299,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 				values = articleProcessor(article)
 				values.append(i)
 				results = results.append(pd.Series(dict(zip(theseColumns, values))), ignore_index=True)
-			bar.update(qIndex.index(i))
+			bar.update(qindex.index(i))
 
 		bar.finish()
 
