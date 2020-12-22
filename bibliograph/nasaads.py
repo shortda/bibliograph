@@ -36,7 +36,7 @@ def make_queries(sources, search_cols, ads_terms=None, query_mask=None, wrapper=
 		pandas DataFrame with query strings whose index corresponds to
 		the index of the correpsonding papers in the sources DataFrame
 
-	badQueries : list
+	bad_queries : list
 		List of index values from the sources DataFrame for which
 		values in columns to be searched either contained spaces or 
 		were 'x'.
@@ -50,10 +50,10 @@ def make_queries(sources, search_cols, ads_terms=None, query_mask=None, wrapper=
 		fields = [[c, c] for i,c in enumerate(search_cols)]
 
 	queries = pd.DataFrame(columns=['query'])
-	badQueries = []
+	bad_queries = []
 
 	if len(queries) == 0:
-		return((queries, badQueries))
+		return((queries, bad_queries))
 
 	for i in sources.index:
 		query = []
@@ -63,7 +63,7 @@ def make_queries(sources, search_cols, ads_terms=None, query_mask=None, wrapper=
 			if (' ' not in value) and (value != 'x'):
 				query.append(f[1] + ':' + value)
 			else:
-				badQueries.append(i)
+				bad_queries.append(i)
 				query.append('x')
 				continue
 
@@ -74,7 +74,7 @@ def make_queries(sources, search_cols, ads_terms=None, query_mask=None, wrapper=
 		
 			queries.loc[i, 'query'] = query
 
-	return((queries, badQueries))
+	return((queries, bad_queries))
 
 def confirmADS(queries):
 	'''
@@ -147,18 +147,18 @@ def queryADSbibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 		retreived from the ADS, and bibcodes from those articles
 		objects. queries index corresponds to sources index.
 
-	badQueries : list
+	bad_queries : list
 		List of index values from the sources DataFrame for which
 		values in columns to be searched either contained spaces or 
 		were 'x'.	
 	'''
-	queries, badQueries = make_queries(sources, search_cols, ads_terms=ads_terms, query_mask=query_mask)
+	queries, bad_queries = make_queries(sources, search_cols, ads_terms=ads_terms, query_mask=query_mask)
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 	queries.insert(len(queries.columns), 'bibcode', ['']*len(queries))
 
 	if len(queries) == 0:
 		print('queryADSbibcodes created no query strings')
-		return ((queries, badQueries))
+		return ((queries, bad_queries))
 
 	if confirmADS(queries):
 
@@ -180,7 +180,7 @@ def queryADSbibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 
 		bar.finish()
 
-	return((queries, badQueries))
+	return((queries, bad_queries))
 
 def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None, query_mask=None, wrapper='references', articleProcessor=None):
 	'''
@@ -244,7 +244,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 		DataFrame with query strings and data returned from ADS
 		queries. Index corresponds to the sources index.
 
-	badQueries : list
+	bad_queries : list
 		List of index values from the sources DataFrame for which
 		values in columns to be searched either contained spaces or 
 		were 'x'.
@@ -259,7 +259,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 	if type(fetchColumns) == str:
 		fetchColumns = [fetchColumns]
 
-	queries, badQueries = make_queries(sources, search_cols, ads_terms=ads_terms, query_mask=query_mask, wrapper=wrapper)
+	queries, bad_queries = make_queries(sources, search_cols, ads_terms=ads_terms, query_mask=query_mask, wrapper=wrapper)
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 
 	if fetchColumns is None:
@@ -273,7 +273,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 
 	if len(queries) == 0:
 		print('queryADS created no query strings')
-		return((results, queries, badQueries))
+		return((results, queries, bad_queries))
 
 	if articleProcessor is None:
 		articleProcessor = lambda x: [x.__getattribute__(t) for t in fetchTerms]
@@ -303,4 +303,4 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 
 		bar.finish()
 
-	return((results, queries, badQueries))
+	return((results, queries, bad_queries))
