@@ -3,7 +3,7 @@ import progressbar
 from datetime import datetime
 import pandas as pd
 
-def make_queries(sources, search_cols, adsTerms=None, toQuery=None, wrapper=None):
+def make_queries(sources, search_cols, ads_terms=None, toQuery=None, wrapper=None):
 	'''
 	Make strings that represent ADS search queries
 
@@ -16,7 +16,7 @@ def make_queries(sources, search_cols, adsTerms=None, toQuery=None, wrapper=None
 		Column labels in the sources DataFrame which contain data for
 		the ADS search queries.
 
-	adsTerms:
+	ads_terms:
 		ADS search terms corrensponding to the column labels in 
 		search_cols. If None, assume the columns labels are ads
 		search terms. List of ADS terms is in the drop-down menu above
@@ -48,8 +48,8 @@ def make_queries(sources, search_cols, adsTerms=None, toQuery=None, wrapper=None
 
 	print('Making ADS query strings for\n', sources.loc[thisIndex], '\n')
 
-	if adsTerms is not None:
-		fields = [[c, adsTerms[i]] for i,c in enumerate(search_cols)]
+	if ads_terms is not None:
+		fields = [[c, ads_terms[i]] for i,c in enumerate(search_cols)]
 	else:		
 		fields = [[c, c] for i,c in enumerate(search_cols)]
 
@@ -120,7 +120,7 @@ def confirmADS(queries):
 				return(False)
 		return(True)
 
-def queryADSbibcodes(sources, search_cols, adsTerms=None, toQuery=None):
+def queryADSbibcodes(sources, search_cols, ads_terms=None, toQuery=None):
 	'''
 	Get ADS bibcodes for papers in the sources DataFrame
 
@@ -133,7 +133,7 @@ def queryADSbibcodes(sources, search_cols, adsTerms=None, toQuery=None):
 		Column labels in the sources DataFrame which contain data for
 		the ADS search queries.
 
-	adsTerms:
+	ads_terms:
 		ADS search terms corrensponding to the column labels in 
 		search_cols. Length and order of terms in this list must
 		correspond to length and order of columns listed in
@@ -156,7 +156,7 @@ def queryADSbibcodes(sources, search_cols, adsTerms=None, toQuery=None):
 		values in columns to be searched either contained spaces or 
 		were 'x'.	
 	'''
-	queries, badQueries = make_queries(sources, search_cols, adsTerms=adsTerms, toQuery=toQuery)
+	queries, badQueries = make_queries(sources, search_cols, ads_terms=ads_terms, toQuery=toQuery)
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 	queries.insert(len(queries.columns), 'bibcode', ['']*len(queries))
 
@@ -186,7 +186,7 @@ def queryADSbibcodes(sources, search_cols, adsTerms=None, toQuery=None):
 
 	return((queries, badQueries))
 
-def queryADS(sources, search_cols, fetchTerms, adsTerms=None, fetchColumns=None, toQuery=None, wrapper='references', articleProcessor=None):
+def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None, toQuery=None, wrapper='references', articleProcessor=None):
 	'''
 	Submit API queries to NASA/ADS.
 
@@ -205,7 +205,7 @@ def queryADS(sources, search_cols, fetchTerms, adsTerms=None, fetchColumns=None,
 		DataFrame. List of ADS terms is in the drop-down menu above
 		the search bar at https://ui.adsabs.harvard.edu/
 
-	adsTerms:
+	ads_terms:
 		ADS search terms corrensponding to the column labels in 
 		search_cols. Length and order of terms in this list must
 		correspond to length and order of columns listed in
@@ -258,12 +258,12 @@ def queryADS(sources, search_cols, fetchTerms, adsTerms=None, fetchColumns=None,
 		search_cols = [search_cols]
 	if type(fetchTerms) == str:
 		fetchTerms = [fetchTerms]
-	if type(adsTerms) == str:
-		adsTerms = [adsTerms]
+	if type(ads_terms) == str:
+		ads_terms = [ads_terms]
 	if type(fetchColumns) == str:
 		fetchColumns = [fetchColumns]
 
-	queries, badQueries = make_queries(sources, search_cols, adsTerms=adsTerms, toQuery=toQuery, wrapper=wrapper)
+	queries, badQueries = make_queries(sources, search_cols, ads_terms=ads_terms, toQuery=toQuery, wrapper=wrapper)
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 
 	if fetchColumns is None:
