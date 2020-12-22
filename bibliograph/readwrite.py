@@ -76,7 +76,7 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 			
 	for texentry in open(bibtex, encoding='utf8').read().split('@')[1:]:
 		
-		bibEntry = {}
+		bibentry = {}
 		texentry = texentry.translate(str.maketrans('','','{}\t')).split('\n')
 
 		for item in texentry:
@@ -94,22 +94,22 @@ def slurp_bibtex(cn, bibtex, refcols, bibcols=None, bibtex_parsers=None):
 					item = item[:-1]
 
 				if tag in tags_to_process:
-					thisTag = bibtex_parsers[tag]
-					if type(thisTag[0]) is not str:
-						for processor in thisTag:
-							bibEntry[processor[0]] = processor[1](item)
+					this_tag = bibtex_parsers[tag]
+					if type(this_tag[0]) is not str:
+						for processor in this_tag:
+							bibentry[processor[0]] = processor[1](item)
 					else:
-						bibEntry[thisTag[0]] = thisTag[1](item)
+						bibentry[this_tag[0]] = this_tag[1](item)
 				elif tag in bibcols:
-					bibEntry[tag] = item
+					bibentry[tag] = item
 
-		bibEntry['ref'] = ''
+		bibentry['ref'] = ''
 		for key in refcols:
-			if key in bibEntry.keys():
-				bibEntry['ref'] += bibEntry[key] + ' '
-		bibEntry['ref'] = bibEntry['ref'][:-1]
+			if key in bibentry.keys():
+				bibentry['ref'] += bibentry[key] + ' '
+		bibentry['ref'] = bibentry['ref'][:-1]
 
-		cn.update(pd.Series(bibEntry, index=bibcols))
+		cn.update(pd.Series(bibentry, index=bibcols))
 
 def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_separator=' | ', csv_parser=None):
 	'''
@@ -180,11 +180,11 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_sep
 		raise ValueError('slurpReferenceCSV needs direction "incoming" or "outgoing" to define sources and targets in cit DataFrame.\n\tGot ' + str(direction))
 
 	bibcols = cn.bib.columns
-	oldSources = cn.bib[cn.uid].copy()
+	old_sources = cn.bib[cn.uid].copy()
 
 	with open(csvname, 'r', encoding='utf-8') as f:
 		reader = csv.reader(f, delimiter=',')
-		badEntries = []
+		bad_entries = []
 		for row in reader:
 			print('\tReading row ' + str(reader.line_num), end='\r')
 			if direction == 'outgoing':
@@ -199,27 +199,27 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=False, csv_sep
 			elif (src == '') and (tgt == ''):
 				raise ValueError('Found row with no data at line ' + str(reader.line_num) + ' in ' + csvname)
 			elif (tgt == ''): 
-				if not (oldSources == src).any():
+				if not (old_sources == src).any():
 					if not sources_from_csv:
 						raise ValueError('Found source in ' + csvname + ' which is not in the bib DataFrame: ' + src)
 					cn.update(refToBib(src, bibcols, cn.refcols))
-					thisSrcI = cn.bib.index[-1]
+					this_src_idx = cn.bib.index[-1]
 				else:
-					thisSrc = cn.bib[cn.bib[cn.uid] == src]
-					if len(thisSrc) > 1:
-						raise RuntimeError('Found repeated values in cn.bib["' + cn.uid + '"] when processing\n' + str(thisSrc))
-					thisSrcI = thisSrc.index[0]
+					this_src = cn.bib[cn.bib[cn.uid] == src]
+					if len(this_src) > 1:
+						raise RuntimeError('Found repeated values in cn.bib["' + cn.uid + '"] when processing\n' + str(this_src))
+					this_src_idx = this_src.index[0]
 			elif src == '':
-				thisTgt = tgt.split(csv_separator)
+				this_tgt = tgt.split(csv_separator)
 				if csv_parser is not None:
-					thisTgt = csv_parser(thisTgt)
-					if thisTgt == 0:
-						badEntries.append(str(reader.line_num) + '  ' + tgt)
+					this_tgt = csv_parser(this_tgt)
+					if this_tgt == 0:
+						bad_entries.append(str(reader.line_num) + '  ' + tgt)
 						continue
-				thisTgt = pd.Series(dict(zip(bibcols, thisTgt)), index=bibcols)
-				cn.update(thisTgt, updateCit=True, src=thisSrcI)
+				this_tgt = pd.Series(dict(zip(bibcols, this_tgt)), index=bibcols)
+				cn.update(this_tgt, updateCit=True, src=this_src_idx)
 			else:
 				raise ValueError('Bad row at', reader.line_num, 'in', csvname)
 		print('\tReading row ' + str(reader.line_num))
-		if len(badEntries) != 0:
-			raise ValueError('Found ' + str(len(badEntries)) + ' bad entries in csv file:\n\t' + '\n\t'.join(badEntries))	
+		if len(bad_entries) != 0:
+			raise ValueError('Found ' + str(len(bad_entries)) + ' bad entries in csv file:\n\t' + '\n\t'.join(bad_entries))	
