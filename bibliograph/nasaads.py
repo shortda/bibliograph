@@ -76,7 +76,7 @@ def make_queries(sources, search_cols, ads_terms=None, query_mask=None, wrapper=
 
 	return((queries, bad_queries))
 
-def confirmADS(queries):
+def confirm_ads_submission(queries):
 	'''
 	Get the current rate limits on the NASA/ADS API token for this
 	system, report values, and ask user to proceed if there may be
@@ -160,7 +160,7 @@ def queryADSbibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 		print('queryADSbibcodes created no query strings')
 		return ((queries, bad_queries))
 
-	if confirmADS(queries):
+	if confirm_ads_submission(queries):
 
 		#set up and start a progress bar
 		widgets = ['Queries: ', progressbar.Percentage(),' ', progressbar.Bar(marker='='),'|', progressbar.Timer(),]
@@ -278,7 +278,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 	if articleProcessor is None:
 		articleProcessor = lambda x: [x.__getattribute__(t) for t in fetchTerms]
 
-	if confirmADS(queries):
+	if confirm_ads_submission(queries):
 
 		#set up and start a progress bar
 		widgets = ['Queries: ', progressbar.Percentage(),' ', progressbar.Bar(marker='='),'|', progressbar.Timer(),]
