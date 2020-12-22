@@ -182,7 +182,7 @@ def query_bibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 
 	return((queries, bad_queries))
 
-def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None, query_mask=None, wrapper='references', articleProcessor=None):
+def queryADS(sources, search_cols, fetch_terms, ads_terms=None, fetchColumns=None, query_mask=None, wrapper='references', articleProcessor=None):
 	'''
 	Submit API queries to NASA/ADS.
 
@@ -194,7 +194,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 		Column labels in the sources DataFrame which contain data for
 		the ADS search queries.
 
-	fetchTerms : list-like
+	fetch_terms : list-like
 		ADS search terms to get for each query. This is a list of data
 		to fields to download from the API rather than search terms
 		with which to construct the search query from the sources
@@ -211,10 +211,10 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 
 	fetchColumns : list-like
 		Bibliography column labels corresponding to the ADS terms
-		listed in fetchTerms. This is a list of bib columns to
+		listed in fetch_terms. This is a list of bib columns to
 		populate with ADS data. Length and order of column labels in
 		this list must correspond to the length and order of ADS terms
-		in fetchTerms.
+		in fetch_terms.
 
 	query_mask : pd.DataFrame, dtype == boolean
 		A boolean mask to select which sources should be queried.
@@ -227,7 +227,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 	articleProcessor : function
 		Function that takes an ads article object and returns a
 		list-like object of with values for a bibliography entry. If
-		not provided, assume fetchTerms contains bibliography column
+		not provided, assume fetch_terms contains bibliography column
 		labels and enter fetched data directly into the results
 		DataFrame.
 
@@ -235,7 +235,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 	-------
 	results : pd.DataFrame
 		DataFrame whose columns are labeled in fetchColumns (or
-		fetchTerms if bibliography columns are ADS terms).
+		fetch_terms if bibliography columns are ADS terms).
 		Addiditionally contains a 'srcidx' column whose value is the
 		index in the sources DataFrame corresponding to the source
 		that generated this query result.
@@ -252,8 +252,8 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 
 	if type(search_cols) == str:
 		search_cols = [search_cols]
-	if type(fetchTerms) == str:
-		fetchTerms = [fetchTerms]
+	if type(fetch_terms) == str:
+		fetch_terms = [fetch_terms]
 	if type(ads_terms) == str:
 		ads_terms = [ads_terms]
 	if type(fetchColumns) == str:
@@ -263,7 +263,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 
 	if fetchColumns is None:
-		theseColumns = fetchTerms
+		theseColumns = fetch_terms
 	else:
 		theseColumns = fetchColumns
 
@@ -276,7 +276,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 		return((results, queries, bad_queries))
 
 	if articleProcessor is None:
-		articleProcessor = lambda x: [x.__getattribute__(t) for t in fetchTerms]
+		articleProcessor = lambda x: [x.__getattribute__(t) for t in fetch_terms]
 
 	if confirm_ads_submission(queries):
 
@@ -287,7 +287,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 
 		for i in qindex:
 			q = queries.loc[i, 'query']
-			search = ads.SearchQuery(q=q, fl=fetchTerms)
+			search = ads.SearchQuery(q=q, fl=fetch_terms)
 			try:
 				search.execute()
 			except:
