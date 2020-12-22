@@ -216,6 +216,7 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=True, csv_sepa
 				cn.update(this_tgt, updateCit=True, src=this_src_idx)
 			else:
 				raise ValueError('Bad row at', reader.line_num, 'in', csvname)
+				
 		print('\tReading row ' + str(reader.line_num))
 		if len(bad_entries) != 0:
 			raise ValueError('Found ' + str(len(bad_entries)) + ' bad entries in csv file:\n\t' + '\n\t'.join(bad_entries))	
