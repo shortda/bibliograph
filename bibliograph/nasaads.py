@@ -97,17 +97,17 @@ def confirm_ads_submission(queries):
 	boolean
 		False if user decides not to proceed when close to rate limit.
 	'''
-	numQueries = len(queries.index)
+	numqueries = len(queries.index)
 	q = ads.SearchQuery(q='q').execute()
 	limits = ads.RateLimits('SearchQuery').limits
 	reset = datetime.utcfromtimestamp(int(limits['reset'])).strftime('%H:%M:%S, %Y-%m-%d')
-	if numQueries > int(limits['limit']):
-		raise ValueError('\nTrying to run up to ' + str(numQueries) + ' NASA/ADS search queries but the daily limit is ' + limits['limit'] + '\n')
-	elif numQueries > int(limits['remaining']):
-		raise ValueError('\nTrying to run up to ' + str(numQueries) + ' NASA/ADS search queries but this API token only has ' + limits['remaining'] + ' queries remaining today.\n\tRate limit resets at ' + reset + '\n')
+	if numqueries > int(limits['limit']):
+		raise ValueError('\nTrying to run up to ' + str(numqueries) + ' NASA/ADS search queries but the daily limit is ' + limits['limit'] + '\n')
+	elif numqueries > int(limits['remaining']):
+		raise ValueError('\nTrying to run up to ' + str(numqueries) + ' NASA/ADS search queries but this API token only has ' + limits['remaining'] + ' queries remaining today.\n\tRate limit resets at ' + reset + '\n')
 	else:
-		remainder = int(limits['remaining']) - numQueries
-		print('\nAbout to run ' + str(numQueries) + ' NASA/ADS search queries.\nThere will be ' + str(remainder) + ' queries available today after this operation.\nRate limit resets at ' + reset + '\n')
+		remainder = int(limits['remaining']) - numqueries
+		print('\nAbout to run ' + str(numqueries) + ' NASA/ADS search queries.\nThere will be ' + str(remainder) + ' queries available today after this operation.\nRate limit resets at ' + reset + '\n')
 		if remainder <= (int(limits['limit'])*0.1):
 			answer = input('Remainder will likely be less than 10% of the daily limit. Enter y to continue, anything else to break.\n')
 			if (answer != 'y') and (answer != 'Y'):
