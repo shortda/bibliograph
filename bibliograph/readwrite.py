@@ -136,7 +136,7 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=True, csv_sepa
 	csvname : string
 		Name of csv file
 
-	cn : bibliograph.citnet
+	cn : bibliograph.CitNet
 		A citation network containing bibliographic and citation data
 		to be modified
 
@@ -173,7 +173,7 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=True, csv_sepa
 	print('\tSlurping file ' + csvname)
 
 	if direction not in ['incoming', 'outgoing']:
-		raise ValueError('slurpReferenceCSV needs direction "incoming" or "outgoing" to define sources and targets in cit DataFrame.\n\tGot ' + str(direction))
+		raise ValueError('slurp_csv needs direction "incoming" or "outgoing" to define sources and targets in cit DataFrame.\n\tGot ' + str(direction))
 
 	bibcols = cn.bib.columns
 	old_sources = cn.bib['ref'].copy()
@@ -203,7 +203,7 @@ def slurp_csv(cn, csvname, direction='outgoing', sources_from_csv=True, csv_sepa
 				else:
 					this_src = cn.bib[cn.bib['ref'] == src]
 					if len(this_src) > 1:
-						raise RuntimeError('Found repeated values in cn.bib["ref"] when processing\n' + str(this_src))
+						raise RuntimeError('Found repeated values in CitNet.bib["ref"] when processing\n' + str(this_src))
 					this_src_idx = this_src.index[0]
 			elif src == '':
 				this_tgt = tgt.split(csv_separator)
