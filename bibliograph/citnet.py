@@ -164,7 +164,6 @@ class CitNet:
             Bibliography index of source that references this target.
         '''
         result = updater(self.bib, entry)
-
         if result.updated:
             self.bib.loc[result.index] = result.entry
             if update_citations and not ((self.cit.src == src) & (self.cit.tgt == result.index)).any():
@@ -199,7 +198,6 @@ class CitNet:
 
         backup(name + '-bib.json')
         self.bib.to_json(name + '-bib.json')
-
         backup(name + '-cit.json')
         self.bib.to_json(name + '-cit.json')
 
@@ -238,10 +236,8 @@ class CitNet:
         '''
 
         queries, badqueries = query_ads_bibcodes(self.bib, search_cols, **kwargs)
-
         self.bib.loc[queries.index, 'bibcode'] = queries['bibcode']
         self.bib.loc[badqueries, 'bibcode'] = '?'
-
         return(queries, badqueries)
 
     def queryads(self, search_cols, fetch_terms, **kwargs):
@@ -280,10 +276,7 @@ class CitNet:
         '''
 
         results, queries, badqueries = queryads(self.bib, search_cols, fetch_terms, **kwargs)
-
         this_updater = (lambda x: self.update_entry(x, update_citations=True, src=x['srcidx']))
-
         results[results.columns[:-1]].apply(this_updater, axis=1)
-
         return(results, queries, badqueries)
 
