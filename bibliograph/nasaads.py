@@ -182,7 +182,7 @@ def query_bibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 
 	return((queries, bad_queries))
 
-def queryADS(sources, search_cols, fetch_terms, ads_terms=None, fetchColumns=None, query_mask=None, wrapper='references', articleProcessor=None):
+def queryADS(sources, search_cols, fetch_terms, ads_terms=None, fetch_cols=None, query_mask=None, wrapper='references', articleProcessor=None):
 	'''
 	Submit API queries to NASA/ADS.
 
@@ -209,7 +209,7 @@ def queryADS(sources, search_cols, fetch_terms, ads_terms=None, fetchColumns=Non
 		search terms. List of ADS terms is in the drop-down menu above
 		the search bar at https://ui.adsabs.harvard.edu/
 
-	fetchColumns : list-like
+	fetch_cols : list-like
 		Bibliography column labels corresponding to the ADS terms
 		listed in fetch_terms. This is a list of bib columns to
 		populate with ADS data. Length and order of column labels in
@@ -234,7 +234,7 @@ def queryADS(sources, search_cols, fetch_terms, ads_terms=None, fetchColumns=Non
 	Returns
 	-------
 	results : pd.DataFrame
-		DataFrame whose columns are labeled in fetchColumns (or
+		DataFrame whose columns are labeled in fetch_cols (or
 		fetch_terms if bibliography columns are ADS terms).
 		Addiditionally contains a 'srcidx' column whose value is the
 		index in the sources DataFrame corresponding to the source
@@ -256,16 +256,16 @@ def queryADS(sources, search_cols, fetch_terms, ads_terms=None, fetchColumns=Non
 		fetch_terms = [fetch_terms]
 	if type(ads_terms) == str:
 		ads_terms = [ads_terms]
-	if type(fetchColumns) == str:
-		fetchColumns = [fetchColumns]
+	if type(fetch_cols) == str:
+		fetch_cols = [fetch_cols]
 
 	queries, bad_queries = make_queries(sources, search_cols, ads_terms=ads_terms, query_mask=query_mask, wrapper=wrapper)
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 
-	if fetchColumns is None:
+	if fetch_cols is None:
 		theseColumns = fetch_terms
 	else:
-		theseColumns = fetchColumns
+		theseColumns = fetch_cols
 
 	theseColumns.append('srcidx')
 
