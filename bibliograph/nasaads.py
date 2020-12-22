@@ -182,7 +182,7 @@ def query_bibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 
 	return((queries, bad_queries))
 
-def submit_ads_queries(sources, search_cols, fetch_terms, ads_terms=None, fetch_cols=None, query_mask=None, wrapper='references', articleProcessor=None):
+def submit_ads_queries(sources, search_cols, fetch_terms, ads_terms=None, fetch_cols=None, query_mask=None, wrapper='references', article_processor=None):
 	'''
 	Submit API queries to NASA/ADS.
 
@@ -224,7 +224,7 @@ def submit_ads_queries(sources, search_cols, fetch_terms, ads_terms=None, fetch_
 		'references'. List of ADS operators is in the drop-down menu
 		above the search bar at https://ui.adsabs.harvard.edu/
 
-	articleProcessor : function
+	article_processor : function
 		Function that takes an ads article object and returns a
 		list-like object of with values for a bibliography entry. If
 		not provided, assume fetch_terms contains bibliography column
@@ -275,8 +275,8 @@ def submit_ads_queries(sources, search_cols, fetch_terms, ads_terms=None, fetch_
 		print('submit_ads_queries created no query strings')
 		return((results, queries, bad_queries))
 
-	if articleProcessor is None:
-		articleProcessor = lambda x: [x.__getattribute__(t) for t in fetch_terms]
+	if article_processor is None:
+		article_processor = lambda x: [x.__getattribute__(t) for t in fetch_terms]
 
 	if confirm_ads_submission(queries):
 
@@ -296,7 +296,7 @@ def submit_ads_queries(sources, search_cols, fetch_terms, ads_terms=None, fetch_
 				raise
 			queries.loc[i, 'ADSarticles'] = search.articles
 			for article in search.articles:
-				values = articleProcessor(article)
+				values = article_processor(article)
 				values.append(i)
 				results = results.append(pd.Series(dict(zip(theseColumns, values))), ignore_index=True)
 			bar.update(qindex.index(i))
