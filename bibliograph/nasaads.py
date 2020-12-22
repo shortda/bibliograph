@@ -3,7 +3,7 @@ import progressbar
 from datetime import datetime
 import pandas as pd
 
-def make_queries(sources, search_cols, ads_terms=None, toQuery=None, wrapper=None):
+def make_queries(sources, search_cols, ads_terms=None, query_mask=None, wrapper=None):
 	'''
 	Make strings that represent ADS search queries
 
@@ -22,7 +22,7 @@ def make_queries(sources, search_cols, ads_terms=None, toQuery=None, wrapper=Non
 		search terms. List of ADS terms is in the drop-down menu above
 		the search bar at https://ui.adsabs.harvard.edu/
 
-	toQuery : pd.DataFrame, dtype == boolean
+	query_mask : pd.DataFrame, dtype == boolean
 		A boolean mask to select which sources should be queried.
 
 	wrapper : string
@@ -41,8 +41,8 @@ def make_queries(sources, search_cols, ads_terms=None, toQuery=None, wrapper=Non
 		values in columns to be searched either contained spaces or 
 		were 'x'.
 	'''
-	if toQuery is not None:
-		thisIndex = sources[toQuery].index
+	if query_mask is not None:
+		thisIndex = sources[query_mask].index
 	else:
 		thisIndex = sources.index
 
@@ -120,7 +120,7 @@ def confirmADS(queries):
 				return(False)
 		return(True)
 
-def queryADSbibcodes(sources, search_cols, ads_terms=None, toQuery=None):
+def queryADSbibcodes(sources, search_cols, ads_terms=None, query_mask=None):
 	'''
 	Get ADS bibcodes for papers in the sources DataFrame
 
@@ -141,7 +141,7 @@ def queryADSbibcodes(sources, search_cols, ads_terms=None, toQuery=None):
 		search terms. List of ADS terms is in the drop-down menu above
 		the search bar at https://ui.adsabs.harvard.edu/
 
-	toQuery : pd.DataFrame, dtype == boolean
+	query_mask : pd.DataFrame, dtype == boolean
 		A boolean mask to select which sources should be queried.
 
 	Returns
@@ -156,7 +156,7 @@ def queryADSbibcodes(sources, search_cols, ads_terms=None, toQuery=None):
 		values in columns to be searched either contained spaces or 
 		were 'x'.	
 	'''
-	queries, badQueries = make_queries(sources, search_cols, ads_terms=ads_terms, toQuery=toQuery)
+	queries, badQueries = make_queries(sources, search_cols, ads_terms=ads_terms, query_mask=query_mask)
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 	queries.insert(len(queries.columns), 'bibcode', ['']*len(queries))
 
@@ -186,7 +186,7 @@ def queryADSbibcodes(sources, search_cols, ads_terms=None, toQuery=None):
 
 	return((queries, badQueries))
 
-def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None, toQuery=None, wrapper='references', articleProcessor=None):
+def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None, query_mask=None, wrapper='references', articleProcessor=None):
 	'''
 	Submit API queries to NASA/ADS.
 
@@ -220,7 +220,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 		this list must correspond to the length and order of ADS terms
 		in fetchTerms.
 
-	toQuery : pd.DataFrame, dtype == boolean
+	query_mask : pd.DataFrame, dtype == boolean
 		A boolean mask to select which sources should be queried.
 
 	wrapper : string
@@ -263,7 +263,7 @@ def queryADS(sources, search_cols, fetchTerms, ads_terms=None, fetchColumns=None
 	if type(fetchColumns) == str:
 		fetchColumns = [fetchColumns]
 
-	queries, badQueries = make_queries(sources, search_cols, ads_terms=ads_terms, toQuery=toQuery, wrapper=wrapper)
+	queries, badQueries = make_queries(sources, search_cols, ads_terms=ads_terms, query_mask=query_mask, wrapper=wrapper)
 	queries.insert(len(queries.columns), 'ADSarticles', [None]*len(queries))
 
 	if fetchColumns is None:
