@@ -1,11 +1,11 @@
 import pandas as pd
 import networkx as nx
-from .nasaads import queryads
-from .nasaads import query_ads_bibcodes
+from .nasaads import query_ads
+from .nasaads import query_bibcodes
 from .readwrite import slurp_bibtex
 from .readwrite import slurp_csv
 from .util import backup
-from .util import updater
+from .util import get_updated_entry
 
 
 class CitNet:
@@ -15,8 +15,8 @@ class CitNet:
     between bibliography, and a NetworkX graph representing the
     network.
 
-    Parameters
-    ----------
+    Possible Keywords
+    -----------------
     bibcols : list-like
         List of labels for bibliography columns. Passed directly to
         pd.Dataframe constructor as 'columns' keyword argument.
@@ -70,57 +70,57 @@ class CitNet:
         bibliography column.
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, bibtex_params=None, csv_params=None, df_params=None, file_params=None):
 
-        if (('refcols' not in kwargs) or ('bibcols' not in kwargs)) and ('bibtex' in kwargs):
-            raise ValueError('bibcols and refcols required when initializing from bibtex.')
-        if ('bibcols' in kwargs):
-            bibcols = kwargs['bibcols']
+        if [(bibtex_params is None), (csv_params is None), (df_params is None), (file_params is None)].count(False) > 1:
+            raise ValueError('CitNet can only be initialized with exactly one of bibtex_params, csv_params, file_params, or df_params')
+
+        if bibtex_params is not None:
+
+            bibcols = bibtex_params['bibcols']
             if 'ref' not in bibcols:
-                bibcols = bibcols + ['ref']
-
-        dfargs = ['data', 'index', 'columns']
-        self.bib = pd.DataFrame(dtype='str', **{arg:kwargs[arg] for arg in dfargs if arg in kwargs})
-        if 'citcols' in kwargs:
-            self.cit = pd.DataFrame(columns=(['src', 'tgt'] + kwargs['citcols']))
-        else:
-            self.cit = pd.DataFrame(columns=['src', 'tgt'])
-
-        if 'bibtex' in kwargs:
-            if ('csv' in kwargs) or ('fileprefix' in kwargs):
-                raise ValueError('citnet is initialized with exactly one of bibtex, csv, or fileprefix. Got values for at least two.')
-            bibtex = kwargs['bibtex']
-            if 'refcols' in kwargs:
-                self.refcols = kwargs['refcols']
+                bibcols.append['ref']
+            if 'refcols' in bibtex_params:
+                self.refcols = bibtex_params['refcols']
             else:
                 self.refcols = 'title'
+            self.bib = pd.DataFrame(columns=bibcols)
+
+            fname = bibtex_params['fname']
+            print('\nLoading data from ' + fname + '\n')
             bibtexargs = ['bibcols', 'bibtex_parsers']
-            print('\nLoading data from ' + bibtex + '\n')
-            slurp_bibtex(self, bibtex, self.refcols, **{arg:kwargs[arg] for arg in bibtexargs if arg in kwargs})
+            slurp_bibtex(self, fname, self.refcols, **{arg:bibtex_params[arg] for arg in bibtexargs if arg in bibtex_params})
+
             self.bib = self.bib.fillna('x')
 
-        if 'csv' in kwargs:
-            if ('bibtex' in kwargs) or ('fileprefix' in kwargs):
-                raise ValueError('citnet is initialized with exactly one of bibtex, csv, or fileprefix. Got values for at least two.')
-            csv = kwargs['csv']
-            csvargs = ['direction', 'sources_from_csv', 'csv_separator', 'csv_parser']
-            print('\nLoading data from ' + csv + '\n')
-            slurp_csv(self, csv, **{arg:kwargs[arg] for arg in csvargs if arg in kwargs})
+        elif csv_params is not None:
 
-        if 'fileprefix' in kwargs:
-            if ('bibtex' in kwargs) or ('csv' in kwargs):
-                raise ValueError('citnet is initialized with exactly one of bibtex, csv, or fileprefix. Got values for at least two.')
-            fileprefix = kwargs['fileprefix']
-            self.bib = pd.read_json(fileprefix + '-bib.json')
+            fname = csv_params['fname']
+            csvargs = ['direction', 'sources_from_csv', 'csv_separator', 'csv_parser']
+            print('\nLoading data from ' + fname + '\n')
+            slurp_csv(self, fname, **{arg:csv_params[arg] for arg in csvargs if arg in csv_params})
+
+        elif df_params is not None:
+
+            self.bib = pd.DataFrame(dtype=str, **df_params)
+
+        elif file_params is not None:
+
+            prefix = file_params['prefix']
+            self.bib = pd.read_json(prefix + '-bib.json')
             try:
-                self.cit = pd.read_json(fileprefix + '-cit.json')
+                self.cit = pd.read_json(prefix + '-cit.json')
             except FileNotFoundError:
-                print(fileprefix + '-cit.json not found, creating blank citation dataframe.')
+                print(prefix + '-cit.json not found, creating blank citation dataframe.')
             try:
-                self.graph = nx.read_graphml(fileprefix + '.graphml')
+                self.graph = nx.read_graphml(prefix + '.graphml')
             except FileNotFoundError:
-                print(fileprefix + '.graphml not found, creating blank graph.')
+                print(prefix + '.graphml not found, creating blank graph.')
                 print('NOT IMPLEMENTED')
+
+        else:
+
+            self.bib = pd.DataFrame()
 
     def __getattr__(self, attr):
 
@@ -143,7 +143,7 @@ class CitNet:
         '''
         self.bib = self.bib.append(*args, **kwargs)
 
-    def update_entry(self, entry, update_citations=False, src=None):
+    def update_entry(self, entry, update_citations=False, src=None, specials='x?', fillna='x'):
         '''
         Take data for a bibliography entry and either overwrite an
         existing entry with new data, rewrite the same entry, or add
@@ -158,18 +158,42 @@ class CitNet:
             exist in the bibliography DataFrame.
 
         update_citations : boolean
-            If True, create new citation edge for this target. 
+            If True, create new citation edge for this target.
 
         src : integer
             Bibliography index of source that references this target.
         '''
-        result = updater(self.bib, entry)
-        if result.updated:
-            self.bib.loc[result.index] = result.entry
-            if update_citations and not ((self.cit.src == src) & (self.cit.tgt == result.index)).any():
-                self.cit = self.cit.append({'src':src, 'tgt':self.bib.index[-1]}, ignore_index=True)
+        result = get_updated_entry(self.bib, entry)
 
-    def load_reference_csv(self, csv, **kwargs):
+        if result.new:
+
+            entry = pd.Series(result.entry, index=self.bib.columns).fillna(fillna)
+            self.bib = self.bib.append(entry, ignore_index=True)
+
+        elif result.updated:
+
+            if len(self.bib) == 0:
+                if result.index is None:
+                    entry = pd.Series(result.entry, index=self.bib.columns).fillna(fillna)
+                    self.bib = self.bib.append(entry, ignore_index=True)
+                else:
+                    raise ValueError('update_entry got an empty bibliography but the index to be updated is not None')
+            else:
+                self.bib.loc[result.index] = result.entry
+
+        if update_citations and (src is not None):
+            if not (self.cit[['src', 'tgt']] == [src, result.index]).any().all():
+                if result.new:
+                    self.cit = self.cit.append({'src':src, 'tgt':self.bib.index[-1]}, ignore_index=True)
+                else:
+                    self.cit = self.cit.append({'src':src, 'tgt':result.index})
+
+        elif update_citations and (src is None):
+
+            raise ValueError('update_entry got update_citations=True but no source index.')
+
+
+    def load_csv(self, csv, **kwargs):
         '''
         Get bibliography and citation data from a csv file.
 
@@ -205,7 +229,7 @@ class CitNet:
             backup(name + '.graphml')
             nx.write_graphml(self.graph, name + '.graphml')
 
-    def get_ads_bibcodes(self, search_cols, **kwargs):
+    def get_bibcodes(self, search_cols, **kwargs):
         '''
         Get ADS bibcodes for papers in the sources DataFrame. If this
         function tries to construct a query for some entry but can't
@@ -225,14 +249,14 @@ class CitNet:
         Returns
         -------
         queries : pd.DataFrame
-            pandas DataFrame with query strings, ads articles objects 
+            pandas DataFrame with query strings, ads articles objects
             retreived from the ADS, and bibcodes from those articles
             objects. queries index corresponds to sources index.
 
         badqueries : list
             List of index values from the sources DataFrame for which
             values in columns to be searched either contained spaces
-            or were 'x'.    
+            or were 'x'.
         '''
 
         queries, badqueries = query_ads_bibcodes(self.bib, search_cols, **kwargs)
@@ -240,43 +264,40 @@ class CitNet:
         self.bib.loc[badqueries, 'bibcode'] = '?'
         return(queries, badqueries)
 
-    def queryads(self, search_cols, fetch_terms, **kwargs):
+    def get_ads_data(self, search_cols, fetch_cols, **kwargs):
         '''
         Get ADS data for bibliography entries.
 
         Parameters
         ----------
         search_cols : list-like
-            Column labels in the sources DataFrame which contain data
-            for the ADS search queries.
+            Column labels in the sources DataFrame which contain data with
+            which to construct the ADS search queries.
 
-        fetch_terms : list-like
-            ADS search terms to get for each query. This is a list of
-            data to fields to download from the API rather than search
-            terms with which to construct the search query from the
-            sources DataFrame. List of ADS terms is in the drop-down
-            menu above the search bar at
-            https://ui.adsabs.harvard.edu/
+        fetch_cols : list-like
+            Column labels in the sources DataFrame that should be populated
+            with data from ADS.
 
         kwargs
             Keyword arguments are passed directly to
-            bibliograph.nasaads.queryADSbibcodes
+            bibliograph.nasaads.query_ads
 
         Returns
         -------
-        queries : pd.DataFrame
-            pandas DataFrame with query strings, ads articles objects 
-            retreived from the ADS, and bibcodes from those articles
-            objects. queries index corresponds to sources index.
+        results : pd.DataFrame
+            pandas DataFrame with retrieved data. Rrsults index will
+            be the bibliography index or query_mask index if there is
+            no wrapper keyword. If there is a wrapper keyword such as
+            'citations' or 'references', results may be longer than
+            the bibliography or query_index.
 
-        badqueries : list
-            List of index values from the sources DataFrame for which
-            values in columns to be searched either contained spaces
-            or were 'x'.    
+        queries : pd.DataFrame
+            pandas DataFrame with query strings and ads articles
+            objects retreived from the ADS. queries index is either
+            the bibliography index or the index of query_mask.
         '''
 
-        results, queries, badqueries = queryads(self.bib, search_cols, fetch_terms, **kwargs)
+        results, queries = query_ads(self.bib, search_cols, fetch_cols, **kwargs)
         this_updater = (lambda x: self.update_entry(x, update_citations=True, src=x['srcidx']))
         results[results.columns[:-1]].apply(this_updater, axis=1)
-        return(results, queries, badqueries)
-
+        return(results, queries)
