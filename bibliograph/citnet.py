@@ -138,12 +138,16 @@ class CitNet:
 
     def append(self, *args, **kwargs):
         '''
-        Wraps pd.DataFrame.append() so append on CitNet appends to the
-        bib DataFrame.
+        Wraps pd.DataFrame.append so append on CitNet appends to the
+        bib DataFrame. This is implemented because pd.DataFrame.append returns
+        a new DataFrame and the use pattern for CitNet should be
+            cn.append(data)
+        rather than
+            cn.bib = cn.append(data)
         '''
         self.bib = self.bib.append(*args, **kwargs)
 
-    def update_entry(self, entry, update_citations=False, src=None, specials='x?', fillna='x'):
+    def update_entry(self, entry, update_citations=False, src=None, fillna='x'):
         '''
         Take data for a bibliography entry and either overwrite an
         existing entry with new data, rewrite the same entry, or add

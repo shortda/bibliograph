@@ -4,6 +4,8 @@ from .util import make_ref_str
 from .util import rawcount
 from .util import df_progress_bar
 from .util import expand_ref_str
+from .util import ManualQuoteError
+from .util import ManualValuesError
 
 def read_bibtex_tags(bibtex, skiptags=[]):
     '''
@@ -97,25 +99,27 @@ def tex_to_bib(tex_tags, tex_documents, tex_transformers):
 def read_manual_data(fname, manual_parser=None, direction='outgoing', separator='|', special='x'):
 
     if direction not in ['incoming', 'outgoing']:
-        raise ValueError('read_manual_data needs direction "incoming" or "outgoing" to define sources and targets of citations.\n\tGot ' + str(direction))
+        raise ValueError('direction must be "incoming" or "outgoing". Got ' + str(direction))
 
     file_length = rawcount(fname)
 
     with open(fname, 'r', encoding='utf-8') as f:
+
         first = f.readline()
         if 'ref_cols:' in first:
             ref_cols = first.split('ref_cols:')[1]
             ref_cols = [c.strip() for c in ref_cols.split(',')]
             print('found csv data with reference columns', ref_cols)
         else:
-            raise ValueError('csv files must have a top line beginning "ref_cols:" that contains bibliography column labels that make up the ref string')
+            raise ValueError('manual csv files must have a top line beginning "ref_cols:" that contains comma-separated bibliography column labels that make up the ref string')
+
         second = f.readline()
         if 'manual_cols:' in second:
             manual_cols = second.split('manual_cols:')[1]
             manual_cols = [c.strip() for c in manual_cols.split(',')]
             print('found csv data with manual columns', manual_cols)
         else:
-            raise ValueError('csv files must have a second line beginning "manual_cols:" that contains labels of bibliography columns to be populated by manually entered lines')
+            raise ValueError('manual csv files must have a second line beginning "manual_cols:" that contains comma-separated labels of bibliography columns to be populated by manually entered lines')
 
     if manual_parser is None:
         def manual_parser(csv_value, manual_cols, separator=separator):
@@ -128,6 +132,8 @@ def read_manual_data(fname, manual_parser=None, direction='outgoing', separator=
         if line[0] == ',':
             line = line[1:]
             if '"' in line:
+                if line.count('"') != 2:
+                    raise ManualQuoteError(num_quotes=line.count('"'))
                 return (1, manual_parser(line.split('"')[1], manual_cols, separator), '')
             else:
                 return (1, manual_parser(line.strip(',').strip(), manual_cols, separator), '')
@@ -135,7 +141,7 @@ def read_manual_data(fname, manual_parser=None, direction='outgoing', separator=
             ref = line[:-1].strip()
             return (0, expand_ref_str(ref, ref_cols), ref)
         else:
-            raise ValueError('read_manual_data found a csv line with more than one value: ' + str(line))
+            raise ManualLineError()
 
     with open(fname, 'r', encoding='utf-8') as f:
         f.readline()
@@ -150,7 +156,16 @@ def read_manual_data(fname, manual_parser=None, direction='outgoing', separator=
             cit_col = 'tgt'
 
         for line in f:
-            csv_col, doc_data, bib_ref = conditional_parser(line)
+            try:
+                csv_col, doc_data, bib_ref = conditional_parser(line)
+            except ManualQuoteError as err:
+                err.set_line_num(line_num)
+                err.set_fname(fname)
+                raise
+            except ManualLineError as err:
+                err.set_line_num(line_num)
+                err.set_fname(fname)
+                raise
 
             if csv_col == 1:
                 doc_data[cit_col] = last_bib_ref
@@ -160,10 +175,10 @@ def read_manual_data(fname, manual_parser=None, direction='outgoing', separator=
                 last_bib_ref = bib_ref
                 manual_data.append(doc_data)
 
-            df_progress_bar(file_length, line_num, prefix='Reading CSV file')
+            df_progress_bar(file_length, line_num + 1, prefix='Reading CSV file')
             line_num += 1
-        print()
 
+    print()
     return pd.DataFrame(manual_data).fillna(special)
 
 def slurp_bibtex(cn, fname, refcols, bibcols=None, bibtex_parsers=None):

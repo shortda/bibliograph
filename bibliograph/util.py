@@ -144,7 +144,7 @@ def get_updated_entry(bib, entry, specials='x?'):
                     updated = True
             return(updateResult(False, updated, entry=to_update, index=to_update.name))
         else:
-            raise RuntimeError('Found repeated ref strings in bibliography when processing\n' + str(entry))
+            raise ValueError('Found repeated ref strings in bibliography when processing\n' + str(entry))
     else:
         return(updateResult(True, False, entry=entry))
 
@@ -188,3 +188,50 @@ def rawcount(filename):
 def expand_ref_str(ref_str, ref_cols):
     bib_values = ref_str.split()
     return pd.Series(dict(zip(ref_cols, bib_values)))
+
+class ManualQuoteError(Exception):
+    # Constructor method
+    def __init__(self, line_num='???', num_quotes='???', fname='???'):
+        self.line_num = str(line_num)
+        self.num_quotes = str(num_quotes)
+        self.fname = str(fname)
+        self.value = self.make_message()
+    # __str__ display function
+    def __str__(self):
+        return(repr(self.value))
+
+    def make_message(self):
+        return 'Line {} in file {} has {} double quote(s). Must be 0 or 2.'.format(self.line_num, self.fname, self.num_quotes)
+
+    def set_line_num(self, line_num):
+        self.line_num = str(line_num)
+        self.value = self.make_message()
+
+    def set_num_quotes(self, num_quotes):
+        self.num_quotes = str(num_quotes)
+        self.value = self.make_message()
+
+    def set_fname(self, fname):
+        self.fname = str(fname)
+        self.value = self.make_message()
+
+class ManualLineError(Exception):
+    # Constructor method
+    def __init__(self, line_num='???', fname='???'):
+        self.line_num = str(line_num)
+        self.fname = str(fname)
+        self.value = self.make_message()
+    # __str__ display function
+    def __str__(self):
+        return(repr(self.value))
+
+    def make_message(self):
+        return 'first and last characters in line {} in file {} must be commas'.format(self.line_num, self.fname)
+
+    def set_line_num(self, line_num):
+        self.line_num = str(line_num)
+        self.value = self.make_message()
+
+    def set_fname(self, fname):
+        self.fname = str(fname)
+        self.value = self.make_message()
