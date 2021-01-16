@@ -6,6 +6,7 @@ from .readwrite import slurp_bibtex
 from .readwrite import slurp_csv
 from .util import backup
 from .util import get_updated_entry
+from numbers import Number
 
 
 class CitNet:
@@ -147,7 +148,7 @@ class CitNet:
         '''
         self.bib = self.bib.append(*args, **kwargs)
 
-    def update_entry(self, entry, update_citations=False, src=None, fillna='x'):
+    def update_entry(self, entry, src=None, tgt=None, fillna='x'):
         '''
         Take data for a bibliography entry and either overwrite an
         existing entry with new data, rewrite the same entry, or add
@@ -161,21 +162,16 @@ class CitNet:
             data for a bibliography entry that may or may not already
             exist in the bibliography DataFrame.
 
-        update_citations : boolean
-            If True, create new citation edge for this target.
-
         src : integer
             Bibliography index of source that references this target.
         '''
         result = get_updated_entry(self.bib, entry)
 
         if result.new:
-
             entry = pd.Series(result.entry, index=self.bib.columns).fillna(fillna)
             self.bib = self.bib.append(entry, ignore_index=True)
 
         elif result.updated:
-
             if len(self.bib) == 0:
                 if result.index is None:
                     entry = pd.Series(result.entry, index=self.bib.columns).fillna(fillna)
@@ -185,16 +181,37 @@ class CitNet:
             else:
                 self.bib.loc[result.index] = result.entry
 
-        if update_citations and (src is not None):
-            if not (self.cit[['src', 'tgt']] == [src, result.index]).any().all():
-                if result.new:
-                    self.cit = self.cit.append({'src':src, 'tgt':self.bib.index[-1]}, ignore_index=True)
-                else:
-                    self.cit = self.cit.append({'src':src, 'tgt':result.index})
+        if (src is not None) and (tgt is None):
+            tgt = entry.ref
+            if isinstance(src, Number):
+                src = self.bib.loc[src, 'ref']
+                if not (self.cit[['src', 'tgt']] == [src, tgt]).all(axis=1).any():
+                    self.cit = self.cit.append({'src':src, 'tgt':tgt}, ignore_index=True).fillna(fillna)
+            elif ' ' in src:
+                if not (self.bib['ref'] == src).any():
+                    raise ValueError('src ref string "{}" not in bibliography'.format(src))
+                if not (self.cit[['src', 'tgt']] == [src, tgt]).all(axis=1).any():
+                    self.cit = self.cit.append({'src':src, 'tgt':tgt}, ignore_index=True).fillna(fillna)
+            else:
+                raise ValueError('src is not a number and has no spaces (cannot be an index or a ref string)')
 
-        elif update_citations and (src is None):
+        elif (src is None) and (tgt is not None):
+            src = entry.ref
+            if isinstance(tgt, Number):
+                tgt = self.bib.loc[tgt, 'ref']
+                if not (self.cit[['src', 'tgt']] == [src, tgt]).all(axis=1).any():
+                    self.cit = self.cit.append({'src':src, 'tgt':tgt}, ignore_index=True).fillna(fillna)
+            elif ' ' in tgt:
+                if not (self.bib['ref'] == tgt).any():
+                    raise ValueError('tgt ref string "{}" not in bibliography'.format(tgt))
+                if not (self.cit[['src', 'tgt']] == [src, tgt]).all(axis=1).any():
+                    self.cit = self.cit.append({'src':src, 'tgt':tgt}, ignore_index=True).fillna(fillna)
+            else:
+                raise ValueError('tgt is not a number and has no spaces (cannot be an index or a ref string)')
 
-            raise ValueError('update_entry got update_citations=True but no source index.')
+        elif (src is not None) and (tgt is not None):
+            raise ValueError('CitNet.update_entry accepts a value for src or tgt, not both')
+
 
 
     def load_csv(self, csv, **kwargs):

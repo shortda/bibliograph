@@ -5,7 +5,7 @@ from .util import rawcount
 from .util import df_progress_bar
 from .util import expand_ref_str
 from .util import ManualQuoteError
-from .util import ManualValuesError
+from .util import ManualLineError
 
 def read_bibtex_tags(bibtex, skiptags=[]):
     '''
@@ -102,6 +102,7 @@ def read_manual_data(fname, manual_parser=None, direction='outgoing', separator=
         raise ValueError('direction must be "incoming" or "outgoing". Got ' + str(direction))
 
     file_length = rawcount(fname)
+    file_length_mod_10 = file_length % 10
 
     with open(fname, 'r', encoding='utf-8') as f:
 
@@ -175,7 +176,8 @@ def read_manual_data(fname, manual_parser=None, direction='outgoing', separator=
                 last_bib_ref = bib_ref
                 manual_data.append(doc_data)
 
-            df_progress_bar(file_length, line_num + 1, prefix='Reading CSV file')
+            if ((line_num + file_length_mod_10) % 10 == 0):
+                df_progress_bar(file_length, line_num, prefix='Reading CSV file')
             line_num += 1
 
     print()

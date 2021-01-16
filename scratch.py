@@ -47,13 +47,15 @@ tex_transformers = {'author':surnameInitialSpace,
                     'volume':(lambda x: {'vl':x}),
                     'doi':lowerDOI}
 
-tex_documents = bg.readwrite.read_tex_data('../dissertation/NCARpapers.bib', tex_tags)
+#tex_documents = bg.readwrite.read_tex_data('../dissertation/NCARpapers.bib', tex_tags)
+tex_documents = bg.readwrite.read_tex_data('../dissertation/NCARpapers1962.bib', tex_tags)
 bib_documents = bg.readwrite.tex_to_bib(tex_tags, tex_documents, tex_transformers)
 bib_documents = [{**doc, **{'ref':bg.util.make_ref_str(doc, ref_cols)}} for doc in bib_documents]
 new_bib_rows = pd.DataFrame(columns = bib_cols, data=bib_documents)
 
 cn = bg.CitNet() # this is from an old version of CitNet - initialization shouldn't create a df with no columns
-cn.bib = new_bib_rows
+cn.bib = new_bib_rows.fillna('x')
+cn.cit = pd.DataFrame(columns=['src', 'tgt'])
 
 def manual_parser(csv_value, manual_cols, separator='|'):
     bib_data = csv_value.split(separator)
@@ -62,5 +64,6 @@ def manual_parser(csv_value, manual_cols, separator='|'):
     bib_data['fau'] = bib_data['au'].split()[0]
     return pd.Series(bib_data)
 
-manual_data = bg.readwrite.read_manual_data('../dissertation/NCAR-referencesManual.csv', manual_parser=manual_parser)
+#manual_data = bg.readwrite.read_manual_data('../dissertation/NCAR-referencesManual.csv', manual_parser=manual_parser)
+manual_data = bg.readwrite.read_manual_data('../dissertation/NCAR1962-manual.csv', manual_parser=manual_parser)
 manual_data = bg.util.add_ref_to_dataframe(manual_data, ref_cols)
