@@ -1,11 +1,11 @@
 import csv
 import pandas as pd
-from .util import make_ref_str
-from .util import rawcount
-from .util import df_progress_bar
-from .util import expand_ref_str
-from .util import ManualQuoteError
-from .util import ManualLineError
+from bibliograph.util import make_ref_str
+from bibliograph.util import rawcount
+from bibliograph.util import df_progress_bar
+from bibliograph.util import expand_ref_str
+from bibliograph.util import ManualQuoteError
+from bibliograph.util import ManualLineError
 
 def read_bibtex_tags(bibtex, skiptags=[]):
     '''

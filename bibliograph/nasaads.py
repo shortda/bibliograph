@@ -1,6 +1,6 @@
 import ads
 import pandas as pd
-from .util import df_progress_bar
+from bibliograph.util import df_progress_bar
 from datetime import datetime
 
 def make_query(source, queries, fields, wrapper):

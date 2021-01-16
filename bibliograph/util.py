@@ -1,5 +1,6 @@
 import pandas as pd
 import networkx as nx
+from numbers import Number
 from os.path import isfile
 from shutil import copyfile
 
@@ -235,3 +236,24 @@ class ManualLineError(Exception):
     def set_fname(self, fname):
         self.fname = str(fname)
         self.value = self.make_message()
+
+
+def check_orphan(doc_id, bib, cit):
+    if ' ' in str(doc_id):
+        if (bib['ref'] == src).any() and (x not in cit['src']) and (x not in cit['tgt']):
+            return True
+        else:
+            return False
+    elif isinstance(doc_id, Number):
+        if (x in bib.index) and (x not in cit['src']) and (x not in cit['tgt']):
+            return True
+        else:
+            return False
+    else:
+        raise ValueError('doc_id is not a number and contains no spaces (cannot be an index or a ref string)')
+
+def count_true(series):
+    try:
+        return series.value_counts()[True]
+    except:
+        return 0

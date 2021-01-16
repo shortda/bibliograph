@@ -2,7 +2,7 @@ import requests
 import os
 import warnings
 import pandas as pd
-from .util import df_progress_bar
+from bibliograph.util import df_progress_bar
 from datetime import datetime
 from urllib.parse import quote as urlquote
 

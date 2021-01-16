@@ -1,11 +1,11 @@
 import pandas as pd
 import networkx as nx
-from .nasaads import query_ads
-from .nasaads import query_bibcodes
-from .readwrite import slurp_bibtex
-from .readwrite import slurp_csv
-from .util import backup
-from .util import get_updated_entry
+from bibliograph.nasaads import query_ads
+from bibliograph.nasaads import query_bibcodes
+from bibliograph.readwrite import slurp_bibtex
+from bibliograph.readwrite import slurp_csv
+from bibliograph.util import backup
+from bibliograph.util import get_updated_entry
 from numbers import Number
 
 
@@ -193,7 +193,7 @@ class CitNet:
                 if not (self.cit[['src', 'tgt']] == [src, tgt]).all(axis=1).any():
                     self.cit = self.cit.append({'src':src, 'tgt':tgt}, ignore_index=True).fillna(fillna)
             else:
-                raise ValueError('src is not a number and has no spaces (cannot be an index or a ref string)')
+                raise ValueError('src is not a number and contains no spaces (cannot be an index or a ref string)')
 
         elif (src is None) and (tgt is not None):
             src = entry.ref

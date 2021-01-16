@@ -3,6 +3,7 @@ from bibliograph.citnet import CitNet
 import bibliograph.readwrite as readwrite
 import bibliograph.adsrequests as adsrequests
 import bibliograph.util as util
+import bibliograph.scrub as scrub
 
 '''
 # NEW PROCESS TO GET BIBTEX, ADS DATA, 2021-01-13
