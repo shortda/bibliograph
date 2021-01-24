@@ -37,7 +37,7 @@ def getPub(pub):
         return({'pub':pub})
 
 def lowerDOI(doi):
-   return({'doi':doi.lower()})
+   return({'doi':doi.lower().strip('https://doi.org/')})
 
 tex_transformers = {'author':surnameInitialSpace,
                     'year':(lambda x: {'yr':x}),
@@ -47,15 +47,15 @@ tex_transformers = {'author':surnameInitialSpace,
                     'volume':(lambda x: {'vl':x}),
                     'doi':lowerDOI}
 
-tex_documents = bg.readwrite.read_tex_data('../dissertation/NCARpapers.bib', tex_tags)
-#tex_documents = bg.readwrite.read_tex_data('../dissertation/NCARpapers1962.bib', tex_tags)
-bib_documents = bg.readwrite.tex_to_bib(tex_tags, tex_documents, tex_transformers)
-bib_documents = [{**doc, **{'ref':bg.util.make_ref_str(doc, ref_cols)}} for doc in bib_documents]
-new_bib_rows = pd.DataFrame(columns = bib_cols, data=bib_documents)
+tex_documents = bg.read_tex_data('../dissertation/NCARpapers.bib', tex_tags)
+#tex_documents = bg.read_tex_data('../dissertation/NCARpapers1962.bib', tex_tags)
+bib_documents = bg.tex_to_bib(tex_tags, tex_documents, tex_transformers)
+bib_documents = [{**doc, **{'ref':bg.make_ref_str(doc, ref_cols)}} for doc in bib_documents]
+new_bib_rows = pd.DataFrame(columns = bib_cols, data=bib_documents).fillna('x')
 
-cn = bg.CitNet() # this is from an old version of CitNet - initialization shouldn't create a df with no columns
-cn.bib = new_bib_rows.fillna('x')
-cn.cit = pd.DataFrame(columns=['src', 'tgt'])
+cn = bg.CitNet(bib_cols) 
+print('importing tex documents')
+cn.import_documents(new_bib_rows)
 
 def manual_parser(csv_value, manual_cols, separator='|'):
     bib_data = csv_value.split(separator)
@@ -63,18 +63,24 @@ def manual_parser(csv_value, manual_cols, separator='|'):
     bib_data = dict(zip(manual_cols, bib_data))
     bib_data['pub'] = getPub(bib_data['pub'])['pub']
     bib_data['fau'] = bib_data['au'].split()[0]
+    if 'doi' in bib_data.keys():
+    	bib_data['doi'] = bib_data['doi'].strip('https://doi.org/')
     return pd.Series(bib_data)
 
-manual_data = bg.readwrite.read_manual_data('../dissertation/NCAR-referencesManual.csv', manual_parser=manual_parser)
-#manual_data = bg.readwrite.read_manual_data('../dissertation/NCAR1962-manual.csv', manual_parser=manual_parser)
-manual_data = bg.util.add_ref_to_dataframe(manual_data, ref_cols)
+manual_data = bg.read_manual_data('../dissertation/NCAR-referencesManual.csv', manual_parser=manual_parser)
+#manual_data = bg.read_manual_data('../dissertation/NCAR1962-manual.csv', manual_parser=manual_parser)
+manual_data = bg.add_ref_to_dataframe(manual_data, ref_cols)
 
-manual_data[[c for c in manual_data.columns if c in cn.bib.columns]].apply(cn.update_entry, axis=1)
-
-rows_to_check = cn.bib[['fau', 'yr', 'pub', 'vl', 'bp', 'au', 'ref']]
-print('Generating cosine similarity matrices')
-similarity_matrices = bg.scrub.cosine_similarity_matrices(rows_to_check)
-print('Indexing similar values')
-index_pairs = bg.scrub.get_similar_pair_indices(similarity_matrices, threshold=0.98, exclude_equivalent=True)
-print('Getting pairs of similar values')
-value_pairs = {k:[[rows_to_check.loc[p[0], k], rows_to_check.loc[p[1], k]] for p in v] for k,v in index_pairs.items()}
+'''
+print('importing manual documents')
+cn.import_documents(manual_data[[c for c in manual_data.columns if c not in ['src','tgt']]])
+print('importing manual citations')
+cn.import_citations(manual_data)
+print('re-importing manual citations')
+cn.import_citations(manual_data)
+'''
+a = manual_data[[c for c in manual_data.columns if c not in ['src','tgt']]]
+b = bg.merge_rows(a, specials='x')
+r = bg.compare_overlap(cn.bib, b, specials='x')
+r = pd.concat([r.rows1.reset_index(drop=True),r.rows2.reset_index(drop=True)]).sort_index().reset_index(drop=True)
+print(r)
