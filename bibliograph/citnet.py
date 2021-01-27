@@ -92,6 +92,10 @@ class CitNet:
 
         return self.bib[item]
 
+    def __iter__(self):
+
+        return self.bib.__iter__()
+
     def __setitem__(self, item, data):
 
         self.bib[item] = data
@@ -109,30 +113,33 @@ class CitNet:
 
     def import_documents(self, new, specials=''):
         specials = [str(s) for s in specials] + list('x?')
-        # check if overlapping data is equal
-        overlap_comparison = compare_overlap(self.bib, new, specials)
-        if not overlap_comparison.consistent:
-            raise ValueError('Input DataFrame inconsistent with bibliography. Use compare_overlap to get mismatched rows.')
         # get portion of both dataframes eith overlapping data. These have:
         #     - columns whose labels are common to both frames
         #     - rows whose ref strings common to both frames
-        bib_overlapping_rows, new_overlapping_rows = get_overlap(self.bib, new, specials=specials)
+        new_overlapping_rows = new.loc[new.ref.isin(self['ref'])]
+        new_overlapping_rows = new_overlapping_rows[[c for c in new if c not in ['tgt','src']]]
+        new_overlapping_rows = new_overlapping_rows.drop_duplicates()
+        new_overlapping_rows = merge_rows(new_overlapping_rows, specials=specials)
+        new_overlapping_rows = new_overlapping_rows.set_index('ref')
+        new_overlapping_rows = new_overlapping_rows.reindex(index=self['ref'])
+        new_overlapping_rows = new_overlapping_rows.reset_index()
+        new_overlapping_rows.index = self.index
         # overwrite special character values in bib with corresponding new values
         is_special_value = lambda x: x in specials
-        self.bib.update(new_overlapping_rows, filter_func=lambda x: Series(map(is_special_value, x)))
+        self.update(new_overlapping_rows, filter_func=lambda x: Series(map(is_special_value, x)))
         # get all other rows in the new dataframe
-        common_cols = bib_overlapping_rows.columns
+        common_cols = [c for c in self.columns if c in new.columns]
         non_overlapping_rows = new[common_cols].loc[~new['ref'].isin(new_overlapping_rows['ref'])]
         # add unique new documents to the bibliography
         where_refs_unique = ~non_overlapping_rows['ref'].duplicated(keep=False)
         new_unique_documents = non_overlapping_rows.loc[where_refs_unique]
-        self.bib = self.bib.append(new_unique_documents, ignore_index=True)
+        self.append(new_unique_documents, ignore_index=True)
         # the remaining documents have ref strings that were not initially in the
         # bibliography and are repeated in multiple rows of the new dataframe
         remainder = non_overlapping_rows.loc[~where_refs_unique]
         common_cols = [col for col in remainder if col in self.bib]
-        self.bib = self.bib.append(merge_rows(remainder[common_cols], specials=specials), ignore_index=True)
-        self.bib = self.bib.fillna('x')
+        self.append(merge_rows(remainder[common_cols], specials=specials), ignore_index=True)
+        self.bib = self.bib.fillna('x').reset_index(drop=True)
 
 
     def import_citations(self, new, specials='', cit_link_columns=['src','tgt']):

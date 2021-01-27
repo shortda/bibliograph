@@ -313,9 +313,11 @@ def get_inconsistent_ids(df, specials='', unique_id='ref'):
 
 
 def merge_rows(df, specials='', unique_id='ref', fill='x'):
+    multi_id = False
     if type(unique_id) != str:
         if len(unique_id) > 2:
             raise ValueError('cannot construct unique identifiers from more than two columns')
+        multi_id = True
         df.insert(0, 'id', df[unique_id].apply(lambda x: ' '.join(map(str, x)), axis=1))
         unique_id = 'id'
     inconsistent_ids = get_inconsistent_ids(df, specials=specials, unique_id=unique_id)
@@ -325,11 +327,19 @@ def merge_rows(df, specials='', unique_id='ref', fill='x'):
     unique_nonspecial_value = lambda x: (get_nonspecial_values(x, specials) or [fill])[0]
     get_group_values = lambda x: x.apply(unique_nonspecial_value)
     values_by_id = rows_with_nonunique_ids.groupby(unique_id).apply(get_group_values)
+    rows_with_unique_ids = df.loc[~df[unique_id].duplicated(keep=False)]
     if len(values_by_id) == 0:
-        return DataFrame(columns=df.columns[1:])
+        if multi_id:
+            return DataFrame(columns=df.columns[1:])
+        else:
+            return DataFrame(columns=df.columns)
     else:
         new_df = DataFrame(data=values_by_id.values, columns=df.columns)
-        return new_df[new_df.columns[1:]]
+        new_df = rows_with_unique_ids.append(new_df)
+        if multi_id:
+            return new_df[new_df.columns[1:]]
+        else:
+            return new_df
 
 
 def compare_overlap(df1, df2, specials='', unique_id='ref'):

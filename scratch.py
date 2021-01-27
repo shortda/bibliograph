@@ -34,7 +34,7 @@ def getPub(pub):
     if pub.lower() in abbr.keys():
         return({'pub':abbr[pub.lower()]})
     else:
-        return({'pub':pub})
+        return({'pub':''.join(pub.split())})
 
 def lowerDOI(doi):
    return({'doi':doi.lower().strip('https://doi.org/')})
