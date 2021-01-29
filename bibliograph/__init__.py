@@ -89,7 +89,7 @@ ads_transformers = {'author':ads_surnameInitialSpace,
                     'bibcode':'copy'}
 
 query_maker = lambda x: bg.adsrequests.make_ads_query(x, bib_transformers, ads_transformers)
-queries = cn.apply(query_maker, axis=1)
+queries = cn.bib.apply(query_maker, axis=1)
 tot = len(queries)
 responses = []
 for q in queries:

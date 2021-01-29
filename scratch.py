@@ -71,16 +71,37 @@ manual_data = bg.read_manual_data('../dissertation/NCAR-referencesManual.csv', m
 #manual_data = bg.read_manual_data('../dissertation/NCAR1962-manual.csv', manual_parser=manual_parser)
 manual_data = bg.add_ref_to_dataframe(manual_data, ref_cols)
 
-'''
 print('importing manual documents')
 cn.import_documents(manual_data[[c for c in manual_data.columns if c not in ['src','tgt']]])
 print('importing manual citations')
 cn.import_citations(manual_data)
-print('re-importing manual citations')
-cn.import_citations(manual_data)
+
+bib_transformers = {'yr':(lambda x: {'year':x}),
+                    'pub':(lambda x: {'bibstem':x}),
+                    'vl':(lambda x: {'volume':x}),
+                    'bp':(lambda x: {'page':x})}
+
+def ads_surnameInitialSpace(authorList):
+  authors = []
+  for a in authorList:
+    if ',' in a:
+      a = a.split(', ')
+      authors.append((''.join(a[0].split(' ')) + ''.join(c for c in a[1] if c.isupper())).lower())
+    else:
+      authors.append((''.join(a.split(' '))).lower())
+  return {'fau':authors[0], 'au':' '.join(authors)}
 '''
-a = manual_data[[c for c in manual_data.columns if c not in ['src','tgt']]]
-b = bg.merge_rows(a, specials='x')
-r = bg.compare_overlap(cn.bib, b, specials='x')
-r = pd.concat([r.rows1.reset_index(drop=True),r.rows2.reset_index(drop=True)]).sort_index().reset_index(drop=True)
-print(r)
+ads_transformers = {'author':ads_surnameInitialSpace,
+                    'year':(lambda x: {'yr':x}),
+                    'bibstem':(lambda x: {'pub':x[0]}),
+                    'volume':(lambda x: {'vl':x}),
+                    'page':(lambda x: {'bp':x[0]}),
+                    'doi':(lambda x: {'doi':x[0].lower()}),
+                    'bibcode':'copy'}
+'''
+ads_transformers = {'doi':(lambda x: {'doi':x[0].lower()}),
+                    'bibcode':'copy'}
+
+print('getting dois and bibcodes for cn.bib from NASA/ADS')
+ads_data = bg.ads_from_docs(cn.bib, bib_transformers, ads_transformers)
+#parsed_responses = ads_data['r'].apply(parse_ads_response, args=(ads_transformers,))

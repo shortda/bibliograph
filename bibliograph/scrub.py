@@ -47,9 +47,6 @@ def get_similar_pairs(df, threshold=0.9, exclude_equivalent=True):
     index_pairs = get_similar_pair_indices(similarity_matrices, threshold, exclude_equivalent)
     print('Getting pairs of similar values')
     value_pairs = {k:[[df.loc[p[0], k], df.loc[p[1], k]] for p in v] for k,v in index_pairs.items()}
-    # for shorter strings, the cosine similarity calculations above can return
-    # a value close to but less than 1 for identical strings, so those pairs
-    # have to be dropped
     if exclude_equivalent:
         masks = {}
         for k,pairs in value_pairs.items():
@@ -70,6 +67,7 @@ def check_for_transpositions(s1, s2, up_to=1):
             present = [p in pairs2 for p in pairs1]
             partition = [l for l in [present[i:i+3] for i in range(0, len(present), 3)] if len(l) == 3]
             if [not any(chunk) for chunk in partition].count(True) in range(1, up_to+1):
+                is_transpose = []
                 for i,chunk in enumerate(partition):
                     if not any(chunk):
                         if pairs2[i*3 + 1] == pairs1[i*3 + 1][::-1]:

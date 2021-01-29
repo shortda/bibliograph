@@ -81,7 +81,7 @@ class CitNet:
 
         self.bib = DataFrame(columns=bib_cols)
         self.cit = DataFrame(columns=cit_cols)
-
+    """
     def __getattr__(self, attr):
 
         if attr in self.__dict__:
@@ -110,41 +110,48 @@ class CitNet:
             cn.bib = cn.append(data)
         '''
         self.bib = self.bib.append(*args, **kwargs)
+    """
+    def import_documents(self, new, specials='', fill='x'):
+        if new.shape[0] == 0:
+            print('CitNet.import_documents got an input DataFrame with no rows')
+            return
 
-    def import_documents(self, new, specials=''):
+        common_cols = [c for c in self.bib.columns if c in new.columns]
         specials = [str(s) for s in specials] + list('x?')
         # get portion of both dataframes eith overlapping data. These have:
         #     - columns whose labels are common to both frames
         #     - rows whose ref strings common to both frames
-        new_overlapping_rows = new.loc[new.ref.isin(self['ref'])]
-        new_overlapping_rows = new_overlapping_rows[[c for c in new if c not in ['tgt','src']]]
-        new_overlapping_rows = new_overlapping_rows.drop_duplicates()
-        new_overlapping_rows = merge_rows(new_overlapping_rows, specials=specials)
-        new_overlapping_rows = new_overlapping_rows.set_index('ref')
-        new_overlapping_rows = new_overlapping_rows.reindex(index=self['ref'])
-        new_overlapping_rows = new_overlapping_rows.reset_index()
-        new_overlapping_rows.index = self.index
-        # overwrite special character values in bib with corresponding new values
-        is_special_value = lambda x: x in specials
-        self.update(new_overlapping_rows, filter_func=lambda x: Series(map(is_special_value, x)))
+        if self.bib.shape[0] != 0:
+            new_overlapping_rows = new.loc[new.ref.isin(self.bib['ref'])]
+            new_overlapping_rows = new_overlapping_rows[[c for c in new if c not in ['tgt','src']]]
+            new_overlapping_rows = new_overlapping_rows.drop_duplicates()
+            new_overlapping_rows = merge_rows(new_overlapping_rows, specials=specials)
+            new_overlapping_rows = new_overlapping_rows.set_index('ref')
+            new_overlapping_rows = new_overlapping_rows.reindex(index=self.bib['ref'])
+            new_overlapping_rows = new_overlapping_rows.reset_index()
+            new_overlapping_rows.index = self.bib.index
+            # overwrite special character values in bib with corresponding new values
+            is_special_value = lambda x: x in specials
+            self.bib.update(new_overlapping_rows, filter_func=lambda x: Series(map(is_special_value, x)))
+            non_overlapping_rows = new[common_cols].loc[~new['ref'].isin(new_overlapping_rows['ref'])]
+        else:
+            non_overlapping_rows = new[common_cols]
         # get all other rows in the new dataframe
-        common_cols = [c for c in self.columns if c in new.columns]
-        non_overlapping_rows = new[common_cols].loc[~new['ref'].isin(new_overlapping_rows['ref'])]
         # add unique new documents to the bibliography
         where_refs_unique = ~non_overlapping_rows['ref'].duplicated(keep=False)
         new_unique_documents = non_overlapping_rows.loc[where_refs_unique]
-        self.append(new_unique_documents, ignore_index=True)
+        self.bib = self.bib.append(new_unique_documents, ignore_index=True)
         # the remaining documents have ref strings that were not initially in the
         # bibliography and are repeated in multiple rows of the new dataframe
         remainder = non_overlapping_rows.loc[~where_refs_unique]
         common_cols = [col for col in remainder if col in self.bib]
-        self.append(merge_rows(remainder[common_cols], specials=specials), ignore_index=True)
-        self.bib = self.bib.fillna('x').reset_index(drop=True)
+        self.bib = self.bib.append(merge_rows(remainder[common_cols], specials=specials, fill=fill), ignore_index=True)
+        self.bib = self.bib.fillna(fill).reset_index(drop=True)
 
 
-    def import_citations(self, new, specials='', cit_link_columns=['src','tgt']):
+    def import_citations(self, new, specials='', cit_link_columns=['src','tgt'], fill='x'):
         if new.shape[0] == 0:
-            print('Import citations got an input DataFrame with no rows')
+            print('CitNet.import_citations got an input DataFrame with no rows')
             return
 
         specials = [str(s) for s in specials] + list('x?')
@@ -160,7 +167,7 @@ class CitNet:
             where_complete_link = has_src & has_tgt
             sorted_new_data = new[select_new_cols].loc[where_complete_link]
             sorted_new_data.columns = sorted_cit_cols
-            self.cit = sorted_new_data
+            self.cit = sorted_new_data[self.cit.columns].drop_duplicates()
             return
 
         is_special_value = lambda x: x in specials
@@ -171,7 +178,7 @@ class CitNet:
         where_number_new = new[new_link_columns].applymap(isnumber)
         if (not where_number_new.all().all()) and where_number_new.any().any():
             raise ValueError('Link IDs must all be bibliography index values or all alphanumeric ref strings. Input DataFrame has some number and some non-number values in columns {}'.format(new_link_columns))
-        where_number_cit = self.cit[['src', 'tgt']].applymap(isnumber)
+        where_number_cit = self.cit[cit_link_columns].applymap(isnumber)
         if where_number_cit.all().all():
             if not where_number_new.all().all():
                 raise ValueError('Existing link IDs are all number values but input DataFrame contains non-number-valued link IDs in either or both columns {}'.format(new_link_columns))
@@ -186,86 +193,18 @@ class CitNet:
         if not compare_link_data.consistent:
             raise ValueError('Input DataFrame inconsistent with existing citation graph. Use compare_graph to get mismatched rows.')
 
-        cit_link_ids = self.cit.apply(lambda x: ' '.join(map(str, x[['src', 'tgt']])), axis=1)
-        new_link_ids = new.apply(lambda x: ' '.join(map(str, x[new_link_columns])), axis=1)
         self.cit = self.cit[sorted_cit_cols]
         new = new[select_new_cols]
         new = new.loc[~new[new_link_columns[0]].apply(is_special_value)]
         new.columns = sorted_cit_cols
-        cit_overlapping_rows, new_overlapping_rows = get_overlap(self.cit, new, specials=specials, unique_id=['src','tgt'])
+        cit_overlapping_rows, new_overlapping_rows = get_overlap(self.cit, new, specials=specials, unique_id=cit_link_columns)
         self.cit.update(new_overlapping_rows, filter_func=lambda x: Series(map(is_special_value, x)))
-        overlapping_srcs = new['src'].isin(new_overlapping_rows['src'])
-        overlapping_tgts = new['tgt'].isin(new_overlapping_rows['tgt'])
+        overlapping_srcs = new[cit_link_columns[0]].isin(new_overlapping_rows[cit_link_columns[0]])
+        overlapping_tgts = new[cit_link_columns[1]].isin(new_overlapping_rows[cit_link_columns[1]])
         non_overlapping_rows = new.loc[~(overlapping_srcs & overlapping_tgts)]
-        where_ids_unique = ~non_overlapping_rows[['src', 'tgt']].duplicated(keep=False)
+        where_ids_unique = ~non_overlapping_rows[cit_link_columns].duplicated(keep=False)
         new_unique_links = non_overlapping_rows.loc[where_ids_unique]
         self.cit = self.cit.append(new_unique_links, ignore_index=True)
         remainder = non_overlapping_rows.loc[~where_ids_unique]
-        common_cols = [col for col in remainder if col in self.cit]
-        merged_new_links = merge_rows(remainder[common_cols], specials=specials, unique_id=['src','tgt'])
-        self.cit = self.cit.append(merged_new_links, ignore_index=True)
-
-
-    def update_entry(self, entry, src=None, tgt=None, fillna='x'):
-        '''
-        Take data for a bibliography entry and either overwrite an
-        existing entry with new data, rewrite the same entry, or add
-        a new entry to the bibliography.
-
-        Parameters
-        ----------
-        entry : pd.Series or pd.DataFrame
-            either a pandas Series object or a DataFrame containing a
-            single row that can be squeezed into a Series. Contains
-            data for a bibliography entry that may or may not already
-            exist in the bibliography DataFrame.
-
-        src : integer
-            Bibliography index of source that references this target.
-        '''
-        result = get_updated_entry(self.bib, entry)
-
-        if result.new:
-            entry = Series(result.entry, index=self.bib.columns).fillna(fillna)
-            self.bib = self.bib.append(entry, ignore_index=True)
-
-        elif result.updated:
-            if len(self.bib) == 0:
-                if result.index is None:
-                    entry = Series(result.entry, index=self.bib.columns).fillna(fillna)
-                    self.bib = self.bib.append(entry, ignore_index=True)
-                else:
-                    raise ValueError('update_entry got an empty bibliography but the index to be updated is not None')
-            else:
-                self.bib.loc[result.index] = result.entry
-
-        if (src is not None) and (tgt is None):
-            tgt = entry.ref
-            if isinstance(src, Number):
-                src = self.bib.loc[src, 'ref']
-                if not (self.cit[['src', 'tgt']] == [src, tgt]).all(axis=1).any():
-                    self.cit = self.cit.append({'src':src, 'tgt':tgt}, ignore_index=True).fillna(fillna)
-            elif ' ' in src:
-                if not (self.bib['ref'] == src).any():
-                    raise ValueError('src ref string "{}" not in bibliography'.format(src))
-                if not (self.cit[['src', 'tgt']] == [src, tgt]).all(axis=1).any():
-                    self.cit = self.cit.append({'src':src, 'tgt':tgt}, ignore_index=True).fillna(fillna)
-            else:
-                raise ValueError('src is not a number and contains no spaces (cannot be an index or a ref string)')
-
-        elif (src is None) and (tgt is not None):
-            src = entry.ref
-            if isinstance(tgt, Number):
-                tgt = self.bib.loc[tgt, 'ref']
-                if not (self.cit[['src', 'tgt']] == [src, tgt]).all(axis=1).any():
-                    self.cit = self.cit.append({'src':src, 'tgt':tgt}, ignore_index=True).fillna(fillna)
-            elif ' ' in tgt:
-                if not (self.bib['ref'] == tgt).any():
-                    raise ValueError('tgt ref string "{}" not in bibliography'.format(tgt))
-                if not (self.cit[['src', 'tgt']] == [src, tgt]).all(axis=1).any():
-                    self.cit = self.cit.append({'src':src, 'tgt':tgt}, ignore_index=True).fillna(fillna)
-            else:
-                raise ValueError('tgt is not a number and has no spaces (cannot be an index or a ref string)')
-
-        elif (src is not None) and (tgt is not None):
-            raise ValueError('CitNet.update_entry accepts a value for src or tgt, not both')
+        merged_new_links = merge_rows(remainder, specials=specials, unique_id=cit_link_columns, fill=fill)
+        self.cit = self.cit.append(merged_new_links, ignore_index=True).fillna(fill)

@@ -296,10 +296,20 @@ def check_column_consistency(series, specials=''):
         return True
 
 
-def get_nonspecial_values(series, specials=''):
-    counts = series.value_counts()
-    return [v for v in counts.index if str(v) not in specials]
-
+def get_consistent_value(series, specials='', fill='', keepSpecial=True):
+    uniques = series.unique()
+    nonspecial = [v for v in uniques if str(v) not in specials]
+    if len(nonspecial) == 1:
+        return nonspecial[0]
+    elif len(nonspecial) == 0:
+        if (len(uniques) == 1) and keepSpecial:
+            return uniques[0]
+        elif fill != '':
+            return fill
+        else:
+            raise ValueError("input series has no nonspecial values but multiple special values and fill=''. must provide fill value.")
+    elif len(nonspecial) > 1:
+        raise ValueError('input series inconsistent: has multiple nonspecial values')
 
 def get_inconsistent_ids(df, specials='', unique_id='ref'):
     where_nonunique_ids = df[unique_id].duplicated(keep=False)
@@ -313,36 +323,25 @@ def get_inconsistent_ids(df, specials='', unique_id='ref'):
 
 
 def merge_rows(df, specials='', unique_id='ref', fill='x'):
-    multi_id = False
-    if type(unique_id) != str:
-        if len(unique_id) > 2:
-            raise ValueError('cannot construct unique identifiers from more than two columns')
-        multi_id = True
-        df.insert(0, 'id', df[unique_id].apply(lambda x: ' '.join(map(str, x)), axis=1))
-        unique_id = 'id'
     inconsistent_ids = get_inconsistent_ids(df, specials=specials, unique_id=unique_id)
     if len(inconsistent_ids) > 0:
-        raise ValueError('found the following ref strings with inconsistent rows', inconsistent_ids)
+        raise ValueError('found the following ref strings with inconsistent rows \n' + '\n'.join(str(inconsistent_ids)))
     rows_with_nonunique_ids = df.loc[df[unique_id].duplicated(keep=False)]
-    unique_nonspecial_value = lambda x: (get_nonspecial_values(x, specials) or [fill])[0]
-    get_group_values = lambda x: x.apply(unique_nonspecial_value)
+    #unique_nonspecial_value = lambda x: (get_nonspecial_values(x, specials) or [fill])[0]
+    #get_group_values = lambda x: x.apply(unique_nonspecial_value)
+    #values_by_id = rows_with_nonunique_ids.groupby(unique_id).apply(get_group_values)
+    get_group_values = lambda x: x.apply(get_consistent_value, args=(specials, fill))
     values_by_id = rows_with_nonunique_ids.groupby(unique_id).apply(get_group_values)
-    rows_with_unique_ids = df.loc[~df[unique_id].duplicated(keep=False)]
     if len(values_by_id) == 0:
-        if multi_id:
-            return DataFrame(columns=df.columns[1:])
-        else:
-            return DataFrame(columns=df.columns)
+        return DataFrame(columns=df.columns)
     else:
+        rows_with_unique_ids = df.loc[~df[unique_id].duplicated(keep=False)]
         new_df = DataFrame(data=values_by_id.values, columns=df.columns)
         new_df = rows_with_unique_ids.append(new_df)
-        if multi_id:
-            return new_df[new_df.columns[1:]]
-        else:
-            return new_df
+        return new_df
 
 
-def compare_overlap(df1, df2, specials='', unique_id='ref'):
+def compare_overlap(df1, df2, specials='', unique_id='ref', fill='x'):
     df1_overlapping_rows, df2_overlapping_rows = get_overlap(df1, df2, specials=specials, unique_id=unique_id)
 
     if any(df1_overlapping_rows[unique_id].duplicated()):
@@ -358,8 +357,8 @@ def compare_overlap(df1, df2, specials='', unique_id='ref'):
     df1_has_data = df1_overlapping_rows.applymap(not_special)
     df2_has_data = df2_overlapping_rows.applymap(not_special)
     both_have_data = df1_has_data.values & df2_has_data.values
-    df1_data_overlap = df1_overlapping_rows.where(both_have_data).fillna('x')
-    df2_data_overlap = df2_overlapping_rows.where(both_have_data).fillna('x')
+    df1_data_overlap = df1_overlapping_rows.where(both_have_data).fillna(fill)
+    df2_data_overlap = df2_overlapping_rows.where(both_have_data).fillna(fill)
     where_consistent = df1_data_overlap.values == df2_data_overlap.values
     everywhere_consistent = where_consistent.all()
     df1_mismatched_rows = df1_overlapping_rows.loc[~where_consistent.all(axis=1)]

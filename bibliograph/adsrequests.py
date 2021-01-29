@@ -2,8 +2,10 @@ from bibliograph.util import df_progress_bar
 from datetime import datetime
 from os import environ
 from pandas import DataFrame
+from pandas import isna
 from pandas import Series
 from requests import get as http_get
+from tqdm import tqdm
 from urllib.parse import quote as urlquote
 
 
@@ -42,7 +44,7 @@ def make_ads_query(row_to_query, bib_transformers, ads_transformers, wrapper='')
 def submit_ads_query(ads_query, key=None):
     if key is None:
         try:
-            key = os.environ['ADS_DEV_KEY']
+            key = environ['ADS_DEV_KEY']
         except KeyError:
             error_text = 'Cannot find ADS developer key to access API.\n'
             error_text += 'Directions here: https://github.com/adsabs/adsabs-dev-api#access\n'
@@ -55,6 +57,9 @@ def submit_ads_query(ads_query, key=None):
 
 
 def parse_ads_response(ads_response, ads_transformers):
+    if isna(ads_response):
+        return ads_response
+        
     if 'bibcode' not in ads_transformers.keys():
         ads_transformers['bibcode'] = 'copy'
 
@@ -78,3 +83,24 @@ def parse_ads_response(ads_response, ads_transformers):
         for k in copy_keys:
             new_row[k] = fetched_data[k]
         return Series(new_row)
+
+
+def ads_from_docs(docs, bib_transformers, ads_transformers):
+    queries = docs.apply(make_ads_query, args=(bib_transformers, ads_transformers), axis=1)
+
+    queries = DataFrame({'q':queries, 'r':Series(dtype='object')})
+    for i in tqdm(queries.index):
+        r = submit_ads_query(queries.loc[i, 'q'])
+        if r.status_code == 200:
+            queries.loc[i, 'r'] = r
+        else:
+            queries.loc[i, 'r'] = r
+            break
+    print()
+    last = queries.loc[queries['r'].notna(), 'r'].iloc[-1]
+    print('API rate limit:', last.headers['X-RateLimit-Limit'])
+    print('queries remaining:', last.headers['X-RateLimit-Remaining'])
+    reset = datetime.utcfromtimestamp(int(last.headers['X-RateLimit-Reset'])).strftime('%H:%M:%S, %Y-%m-%d')
+    print('rate limit resets at ' + str(reset))
+
+    return queries
