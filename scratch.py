@@ -5,6 +5,8 @@ import csv
 bib_cols = ['fau', 'yr', 'pub', 'vl', 'bp', 'doi', 'au', 'deg', 'bibcode', 'ref']
 ref_cols = bib_cols[:5]
 
+cn = bg.CitNet(bib_cols)
+
 tex_tags = ['author', 'year', 'journal', 'booktitle', 'pages', 'volume', 'doi']
 
 with open('../dissertation/bibstems.csv', 'r', encoding='utf-8') as f:
@@ -53,9 +55,9 @@ bib_documents = bg.tex_to_bib(tex_tags, tex_documents, tex_transformers)
 bib_documents = [{**doc, **{'ref':bg.make_ref_str(doc, ref_cols)}} for doc in bib_documents]
 new_bib_rows = pd.DataFrame(columns = bib_cols, data=bib_documents).fillna('x')
 
-cn = bg.CitNet(bib_cols) 
 print('importing tex documents')
 cn.import_documents(new_bib_rows)
+cn.bib.deg = 0
 
 def manual_parser(csv_value, manual_cols, separator='|'):
     bib_data = csv_value.split(separator)
@@ -102,6 +104,28 @@ ads_transformers = {'author':ads_surnameInitialSpace,
 ads_transformers = {'doi':(lambda x: {'doi':x[0].lower()}),
                     'bibcode':'copy'}
 
-print('getting dois and bibcodes for cn.bib from NASA/ADS')
-ads_data = bg.ads_from_docs(cn.bib, bib_transformers, ads_transformers)
+#print('getting dois and bibcodes for cn.bib from NASA/ADS')
+#ads_data = bg.ads_from_docs(cn.bib, bib_transformers, ads_transformers)
 #parsed_responses = ads_data['r'].apply(parse_ads_response, args=(ads_transformers,))
+
+def make_manual_string(doc):
+	doc = doc.squeeze()
+	strings = doc[['au', 'yr', 'pub', 'vl', 'bp', 'doi']].values
+	return '_'.join(strings)
+
+def make_manual_row(bib_row, deg, bib, cit, out):
+	if bib_row['deg'] != deg:
+		return
+	pos = out.shape[0] + 1
+	out.loc[pos] = [bib_row['ref'], '']
+	if bib_row['ref'] in cit['src'].values:
+		links = cit.loc[cit['src']==bib_row['ref']]
+		for i in links.index:
+			pos = pos + 1
+			tgt_value = make_manual_string(bib.loc[bib['ref']==cit.loc[i, 'tgt']])
+			out.loc[pos] = ['', tgt_value]
+
+out = pd.DataFrame(columns = ['src', 'tgt'])
+cn.bib.sort_values(by=['yr','fau']).apply(make_manual_row, args=(0, cn.bib, cn.cit, out), axis=1)
+out.to_excel('../dissertation/NCAR-referencesManual-auto.xlsx', index=False)
+out.to_csv('../dissertation/NCAR-referencesManual-auto.csv', index=False)
