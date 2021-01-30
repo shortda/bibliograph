@@ -1,7 +1,7 @@
 # bibliograph
 ### A Python package for visualizing and analyzing bibliographic data
 
-**bibliograph** takes a BibTex file and provides a flexible representation of a citation network using pandas DataFrames and NetworkX graphs. This is an extremely early version of a package under development as part of a dissertation in the history of science. The first alpha release is installable via 
+**bibliograph** takes a BibTex file and provides a flexible representation of a citation network using pandas DataFrames and NetworkX graphs. This is an extremely early version of a package under development for a dissertation in the history of science. The first alpha release is installable via 
 
     pip install git+https://github.com/shortorian/bibliograph.git@v0.01.01-alpha01 
 
