@@ -1,6 +1,5 @@
 import bibliograph as bg
 import pandas as pd
-import csv
 
 bib_cols = ['fau', 'yr', 'pub', 'vl', 'bp', 'doi', 'au', 'deg', 'bibcode', 'ref']
 ref_cols = bib_cols[:5]
@@ -129,3 +128,29 @@ out = pd.DataFrame(columns = ['src', 'tgt'])
 cn.bib.sort_values(by=['yr','fau']).apply(make_manual_row, args=(0, cn.bib, cn.cit, out), axis=1)
 out.to_excel('../dissertation/NCAR-referencesManual-auto.xlsx', index=False)
 out.to_csv('../dissertation/NCAR-referencesManual-auto.csv', index=False)
+'''
+manual_data = pd.read_csv('../dissertation/NCAR-referencesManual.csv', skiprows=2, header=None)
+
+def manual_converter(tgt):
+	tgt = tgt.split(' | ')
+	tgt[0] = '_'.join(tgt[0].split())
+	tgt[1] = tgt[0] + '__' + tgt[1]
+	tgt[2] = ''.join(tgt[2].split())
+	return '_'.join(tgt[1:])
+
+manual_data.loc[manual_data[1].notna(), 1] = manual_data.loc[manual_data[1].notna(), 1].apply(manual_converter)
+
+def manual_parser(csv_value, manual_cols, separator='_', auth_sep=None):
+    if auth_sep is not None:
+    	bib_data = csv_value.split(auth_sep)
+    	bib_data = [' '.join(v[0].split(separator))] + v[1].split(separator)
+    else:
+    	bib_data = csv_value.split(separator)
+    bib_data = [datum.strip() for datum in bib_data]
+    bib_data = dict(zip(manual_cols, bib_data))
+    bib_data['pub'] = getPub(bib_data['pub'])['pub']
+    bib_data['fau'] = bib_data['au'].split()[0]
+    if 'doi' in bib_data.keys():
+    	bib_data['doi'] = bib_data['doi'].strip('https://doi.org/')
+    return pd.Series(bib_data)
+'''
