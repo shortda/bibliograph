@@ -325,7 +325,7 @@ def get_inconsistent_ids(df, specials='', unique_id='ref'):
 def merge_rows(df, specials='', unique_id='ref', fill='x'):
     inconsistent_ids = get_inconsistent_ids(df, specials=specials, unique_id=unique_id)
     if len(inconsistent_ids) > 0:
-        raise ValueError('found the following ref strings with inconsistent rows \n' + '\n'.join(str(inconsistent_ids)))
+        raise ValueError('found the following ref strings with inconsistent rows \n' + '\n'.join(map(str, inconsistent_ids)))
     rows_with_nonunique_ids = df.loc[df[unique_id].duplicated(keep=False)]
     #unique_nonspecial_value = lambda x: (get_nonspecial_values(x, specials) or [fill])[0]
     #get_group_values = lambda x: x.apply(unique_nonspecial_value)
